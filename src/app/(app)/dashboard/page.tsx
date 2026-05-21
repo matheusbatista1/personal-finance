@@ -31,7 +31,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const params = await searchParams;
   const { year, month, raw } = resolveCompetence(params.m);
 
-  const useCase = makeComputeMonthlyDashboard();
+  const useCase = await makeComputeMonthlyDashboard();
   const dashboard = await useCase.execute({ year, month });
 
   return (
