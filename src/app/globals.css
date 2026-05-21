@@ -295,6 +295,39 @@ body {
   animation: reveal 0.8s forwards ease-out;
 }
 
+/* Apple Wallet–style stack: cards overlap by 160px; the active card lifts on hover. */
+.wallet-stack {
+  perspective: 1000px;
+}
+
+.wallet-stack .wallet-card {
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.wallet-stack .wallet-card:not(:first-child) {
+  margin-top: -160px;
+}
+
+.wallet-stack .wallet-card:hover,
+.wallet-stack .wallet-card:focus-visible {
+  transform: translateY(-20px) translateZ(30px);
+  cursor: pointer;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-stack .wallet-card,
+  .wallet-stack .wallet-card:hover {
+    transition: none;
+    transform: none;
+  }
+  .wallet-stack .wallet-card:not(:first-child) {
+    margin-top: 16px;
+  }
+}
+
 /* Light theme glass swap */
 [data-theme="light"] .glass-panel {
   background: rgba(255, 255, 255, 0.7);
