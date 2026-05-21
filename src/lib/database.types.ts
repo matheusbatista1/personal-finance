@@ -298,6 +298,8 @@ export type Database = {
           invoice_id: string | null;
           occurred_at: string;
           operation: Database["public"]["Enums"]["operation_type"] | null;
+          recurrence: Database["public"]["Enums"]["recurrence_kind"];
+          recurrence_group_id: string | null;
           split_mode: Database["public"]["Enums"]["split_mode"];
           type: Database["public"]["Enums"]["transaction_type"];
           updated_at: string;
@@ -319,6 +321,8 @@ export type Database = {
           invoice_id?: string | null;
           occurred_at?: string;
           operation?: Database["public"]["Enums"]["operation_type"] | null;
+          recurrence?: Database["public"]["Enums"]["recurrence_kind"];
+          recurrence_group_id?: string | null;
           split_mode?: Database["public"]["Enums"]["split_mode"];
           type: Database["public"]["Enums"]["transaction_type"];
           updated_at?: string;
@@ -340,6 +344,8 @@ export type Database = {
           invoice_id?: string | null;
           occurred_at?: string;
           operation?: Database["public"]["Enums"]["operation_type"] | null;
+          recurrence?: Database["public"]["Enums"]["recurrence_kind"];
+          recurrence_group_id?: string | null;
           split_mode?: Database["public"]["Enums"]["split_mode"];
           type?: Database["public"]["Enums"]["transaction_type"];
           updated_at?: string;
@@ -469,6 +475,7 @@ export type Database = {
       account_type: "PF" | "PJ";
       category_kind: "expense" | "income" | "both";
       operation_type: "card" | "loan" | "pix";
+      recurrence_kind: "none" | "monthly";
       split_mode: "none" | "equal" | "custom";
       transaction_type: "income" | "expense";
     };
@@ -602,6 +609,7 @@ export const Constants = {
       account_type: ["PF", "PJ"],
       category_kind: ["expense", "income", "both"],
       operation_type: ["card", "loan", "pix"],
+      recurrence_kind: ["none", "monthly"],
       split_mode: ["none", "equal", "custom"],
       transaction_type: ["income", "expense"],
     },

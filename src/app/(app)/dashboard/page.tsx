@@ -6,6 +6,9 @@ import { SplitResumesPanel } from "@/components/finance/SplitResumesPanel";
 import { RecentTransactionsList } from "@/components/finance/RecentTransactionsList";
 import { Fab } from "@/components/finance/Fab";
 import { currentCompetence, parseCompetence } from "@/lib/format";
+import { requireUser } from "@/lib/auth";
+import { createClient } from "@/infrastructure/database/supabase/server";
+import { materializeRecurring } from "@/infrastructure/services/recurring";
 
 interface DashboardPageProps {
   searchParams: Promise<{ m?: string }>;
@@ -30,6 +33,10 @@ function resolveCompetence(input?: string): { year: number; month: number; raw: 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const params = await searchParams;
   const { year, month, raw } = resolveCompetence(params.m);
+
+  const user = await requireUser();
+  const supabase = await createClient();
+  await materializeRecurring(supabase, user.id, year, month);
 
   const useCase = await makeComputeMonthlyDashboard();
   const dashboard = await useCase.execute({ year, month });

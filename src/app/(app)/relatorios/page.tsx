@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
+import { materializeRecurring } from "@/infrastructure/services/recurring";
 import { MonthSelector } from "@/components/layout/MonthSelector";
 import { computeBillingWindow, formatReferenceLong } from "@/application/services/invoice";
 import { currentCompetence, formatBRL, formatCompetence, parseCompetence } from "@/lib/format";
@@ -76,7 +77,7 @@ function resolveCompetence(input?: string) {
 }
 
 export default async function RelatoriosPage({ searchParams }: PageProps) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const { year, month } = resolveCompetence(params.m);
   const competence = `${year}-${String(month).padStart(2, "0")}`;
@@ -86,6 +87,7 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
   const trendStartWindow = computeBillingWindow(trendStart.year, trendStart.month);
 
   const supabase = await createClient();
+  await materializeRecurring(supabase, user.id, year, month);
 
   const [monthTxRes, trendTxRes, splitsRes] = await Promise.all([
     supabase

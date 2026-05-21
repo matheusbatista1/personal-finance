@@ -27,6 +27,7 @@ const transactionPayloadSchema = z.object({
       customAmountCents: z.number().int().nonnegative().nullable(),
     }),
   ),
+  recurringMonthly: z.boolean().optional().default(false),
 });
 
 export type ActionResult =
@@ -49,6 +50,8 @@ type TransactionPayload = {
   installment_number: number;
   installment_total: number;
   installment_group_id: string | null;
+  recurrence: "none" | "monthly";
+  recurrence_group_id: string | null;
 };
 
 interface PreparedInstallment {
@@ -139,6 +142,11 @@ async function prepareTransaction(
 
   const installments: PreparedInstallment[] = [];
   const installmentGroupId = installmentTotal > 1 ? crypto.randomUUID() : null;
+  // Only the first installment carries the recurrence flag — repeating a parceled
+  // purchase would multiply N entries per month, which never matches user intent.
+  const recurrence: "none" | "monthly" =
+    data.recurringMonthly && installmentTotal === 1 ? "monthly" : "none";
+  const recurrenceGroupId = recurrence === "monthly" ? crypto.randomUUID() : null;
 
   for (let i = 0; i < installmentTotal; i++) {
     const payload: TransactionPayload = {
@@ -157,6 +165,8 @@ async function prepareTransaction(
       installment_number: i + 1,
       installment_total: installmentTotal,
       installment_group_id: installmentGroupId,
+      recurrence: i === 0 ? recurrence : "none",
+      recurrence_group_id: i === 0 ? recurrenceGroupId : null,
     };
 
     const splits = splitSlices
@@ -237,11 +247,13 @@ export async function updateTransaction(
 
   const supabase = await createClient();
 
-  // Preserva installment_number/total/group originais — só atualiza demais campos.
+  // Preserva installment/recurrence originais — só atualiza demais campos.
   const {
     installment_number: _ignored1,
     installment_total: _ignored2,
     installment_group_id: _ignored3,
+    recurrence: _ignored4,
+    recurrence_group_id: _ignored5,
     ...mutablePayload
   } = installment.payload;
 

@@ -53,6 +53,7 @@ export const createTransactionSchema = z.object({
   installmentTotal: installmentSchema.default(1),
   userIncludedInSplit: z.boolean(),
   participants: z.array(splitParticipantSchema),
+  recurringMonthly: z.boolean().optional().default(false),
 });
 
 export type CreateTransactionInput = z.input<typeof createTransactionSchema>;

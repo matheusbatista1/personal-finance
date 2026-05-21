@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
+import { materializeRecurring } from "@/infrastructure/services/recurring";
 import { MonthSelector } from "@/components/layout/MonthSelector";
 import {
   TransactionFilters,
@@ -82,7 +83,7 @@ function normalizeDate(value?: string): string {
 }
 
 export default async function TransacoesPage({ searchParams }: PageProps) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const { year, month } = resolveCompetence(params.m);
   const typeFilter = normalizeType(params.type);
@@ -96,6 +97,7 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
   const window = computeBillingWindow(year, month);
 
   const supabase = await createClient();
+  await materializeRecurring(supabase, user.id, year, month);
 
   const [walletsRes, cardsRes, categoriesRes] = await Promise.all([
     supabase.from("wallets").select("id, name").order("name"),

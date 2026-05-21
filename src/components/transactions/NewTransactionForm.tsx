@@ -472,6 +472,24 @@ export function NewTransactionForm({
             ) : null}
           </div>
 
+          {mode === "create" ? (
+            <label className="bg-surface-container-low p-sm gap-sm flex cursor-pointer items-center rounded-lg">
+              <input
+                type="checkbox"
+                className="bg-surface-container-high border-outline-variant/40 text-primary focus:ring-primary/40 h-4 w-4 cursor-pointer rounded border"
+                {...register("recurringMonthly")}
+              />
+              <div className="flex-1">
+                <p className="text-body-md text-on-surface font-sans font-medium">
+                  Recorrente todo mês
+                </p>
+                <p className="text-label-sm text-on-surface-variant font-mono">
+                  Replica esta transação automaticamente nos meses seguintes.
+                </p>
+              </div>
+            </label>
+          ) : null}
+
           {watchedType === "expense" ? (
             <section className="glass-panel p-md gap-md flex flex-col rounded-xl">
               <div className="flex items-center justify-between">
