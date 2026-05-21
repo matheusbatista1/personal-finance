@@ -9,6 +9,7 @@ import {
   PerContactBreakdown,
   type ContactBreakdownRow,
 } from "@/components/reports/PerContactBreakdown";
+import { ExportControls } from "@/components/reports/ExportControls";
 
 export const metadata = {
   title: "Relatórios — FinLux",
@@ -189,11 +190,22 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
             {formatReferenceLong(year, month)} · panorama do mês e tendência.
           </p>
         </div>
-        <MonthSelector
-          competence={competence}
-          label={formatCompetence(year, month)}
-          pathname="/relatorios"
-        />
+        <div className="gap-sm flex flex-wrap items-center">
+          <ExportControls
+            competence={competence}
+            expenseTotalCents={expenseTotal}
+            incomeTotalCents={incomeTotal}
+            userShareTotalCents={userShareTotal}
+            categorySlices={categorySlices}
+            trendPoints={trendPoints}
+            contactRows={contactRows}
+          />
+          <MonthSelector
+            competence={competence}
+            label={formatCompetence(year, month)}
+            pathname="/relatorios"
+          />
+        </div>
       </header>
 
       <div className="space-y-lg">

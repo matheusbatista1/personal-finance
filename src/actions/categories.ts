@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { createCategorySchema, type CreateCategoryInput } from "@/application/validation/category";
 
 export type ActionResult =
-  | { ok: true }
+  | { ok: true; id?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
 function revalidateAfter() {
@@ -29,12 +29,16 @@ export async function createCategory(input: CreateCategoryInput): Promise<Action
   const user = await requireUser();
   const supabase = await createClient();
 
-  const { error } = await supabase.from("categories").insert({
-    user_id: user.id,
-    name: parsed.data.name,
-    icon_name: parsed.data.iconName,
-    color: parsed.data.color || null,
-  });
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({
+      user_id: user.id,
+      name: parsed.data.name,
+      icon_name: parsed.data.iconName,
+      color: parsed.data.color || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     if (error.code === "23505") {
@@ -44,7 +48,7 @@ export async function createCategory(input: CreateCategoryInput): Promise<Action
   }
 
   revalidateAfter();
-  return { ok: true };
+  return { ok: true, id: data?.id };
 }
 
 export async function updateCategory(

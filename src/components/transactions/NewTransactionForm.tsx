@@ -19,6 +19,7 @@ import {
   type CreateTransactionOutput,
 } from "@/application/validation/transaction";
 import { calculateSplit, InvalidSplitError } from "@/application/services/splitCalculator";
+import { CategoryFormDialog } from "@/components/categories/CategoryFormDialog";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +85,8 @@ export function NewTransactionForm({
   const [deletePending, startDeleteTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [settlePendingId, setSettlePendingId] = useState<string | null>(null);
+  const [localCategories, setLocalCategories] = useState<CategoryOption[]>(categories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [settlementState, setSettlementState] = useState<Record<string, string | null>>(() => {
     const initial: Record<string, string | null> = {};
     for (const split of existingSplits ?? []) {
@@ -305,18 +308,28 @@ export function NewTransactionForm({
               >
                 Categoria
               </label>
-              <select
-                id="categoryId"
-                className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm w-full rounded-md border-b font-sans outline-none focus:ring-0"
-                {...register("categoryId")}
-              >
-                <option value="">Sem categoria</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <div className="gap-xs flex items-stretch">
+                <select
+                  id="categoryId"
+                  className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm flex-1 rounded-md border-b font-sans outline-none focus:ring-0"
+                  {...register("categoryId")}
+                >
+                  <option value="">Sem categoria</option>
+                  {localCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setCategoryDialogOpen(true)}
+                  aria-label="Nova categoria"
+                  className="bg-primary-container/20 text-primary hover:bg-primary-container/30 flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-colors"
+                >
+                  <Plus size={16} aria-hidden />
+                </button>
+              </div>
               <FormError>{errors.categoryId?.message}</FormError>
             </div>
             <div>
@@ -618,6 +631,15 @@ export function NewTransactionForm({
           </div>
         </footer>
       </form>
+      <CategoryFormDialog
+        mode="create"
+        open={categoryDialogOpen}
+        onClose={() => setCategoryDialogOpen(false)}
+        onCreated={(cat) => {
+          setLocalCategories((prev) => [...prev, { id: cat.id, name: cat.name }]);
+          setValue("categoryId", cat.id, { shouldDirty: true });
+        }}
+      />
     </div>
   );
 }

@@ -354,6 +354,40 @@ button:disabled,
   }
 }
 
+/* Print stylesheet: focus on report content, hide app chrome. */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  nav,
+  header[class*="fixed"],
+  .no-print {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 16px !important;
+    max-width: none !important;
+  }
+  .glass-panel,
+  .modal-glass {
+    background: #fff !important;
+    border: 1px solid #ccc !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    break-inside: avoid;
+  }
+  .text-on-surface,
+  .text-on-surface-variant,
+  .text-primary,
+  .text-tertiary,
+  .text-error {
+    color: #000 !important;
+  }
+}
+
 /* Light theme glass swap */
 [data-theme="light"] .glass-panel {
   background: rgba(255, 255, 255, 0.7);

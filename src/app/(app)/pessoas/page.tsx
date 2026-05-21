@@ -14,12 +14,31 @@ export default async function PessoasPage() {
   await requireUser();
   const supabase = await createClient();
 
-  const { data: contacts } = await supabase
-    .from("contacts")
-    .select("id, name, email, color")
-    .order("created_at", { ascending: true });
+  const [contactsRes, splitsRes] = await Promise.all([
+    supabase
+      .from("contacts")
+      .select("id, name, email, color")
+      .order("created_at", { ascending: true }),
+    supabase.from("transaction_splits").select("contact_id, amount_cents, settled_at"),
+  ]);
 
-  const rows = contacts ?? [];
+  const rows = contactsRes.data ?? [];
+  const splitRows = (splitsRes.data ?? []) as Array<{
+    contact_id: string;
+    amount_cents: number | string;
+    settled_at: string | null;
+  }>;
+
+  const receivableByContact = new Map<string, number>();
+  for (const split of splitRows) {
+    if (split.settled_at) continue;
+    const amount =
+      typeof split.amount_cents === "number" ? split.amount_cents : Number(split.amount_cents);
+    receivableByContact.set(
+      split.contact_id,
+      (receivableByContact.get(split.contact_id) ?? 0) + amount,
+    );
+  }
 
   return (
     <>
@@ -50,7 +69,7 @@ export default async function PessoasPage() {
               initial={row.name.charAt(0).toUpperCase()}
               role={row.color || "Contato"}
               email={row.email}
-              owedToMeCents={0}
+              owedToMeCents={receivableByContact.get(row.id) ?? 0}
               iOweCents={0}
               initialColor={PALETTE[idx % PALETTE.length] ?? "primary"}
             />

@@ -21,6 +21,7 @@ interface Props {
   initialValues?: CreateCategoryInput;
   open: boolean;
   onClose: () => void;
+  onCreated?: (category: { id: string; name: string; iconName: string }) => void;
 }
 
 const ICON_OPTIONS = allowedCategoryIcons;
@@ -31,7 +32,14 @@ const DEFAULT_VALUES: CreateCategoryInput = {
   color: "",
 };
 
-export function CategoryFormDialog({ mode, categoryId, initialValues, open, onClose }: Props) {
+export function CategoryFormDialog({
+  mode,
+  categoryId,
+  initialValues,
+  open,
+  onClose,
+  onCreated,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -62,6 +70,9 @@ export function CategoryFormDialog({ mode, categoryId, initialValues, open, onCl
       if (!result.ok) {
         setServerError(result.error);
         return;
+      }
+      if (mode === "create" && result.id && onCreated) {
+        onCreated({ id: result.id, name: values.name, iconName: values.iconName });
       }
       onClose();
     });
