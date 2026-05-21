@@ -4,10 +4,10 @@ import { useMemo, useState, useTransition } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { X, Wallet, CreditCard, Users, Plus } from "lucide-react";
+import { X, Wallet, CreditCard, Users, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
-import { createTransaction } from "@/actions/transactions";
+import { createTransaction, deleteTransaction, updateTransaction } from "@/actions/transactions";
 import {
   createTransactionSchema,
   type CreateTransactionInput,
@@ -35,10 +35,15 @@ export interface ContactOption {
   initial: string;
 }
 
+type Mode = "create" | "edit";
+
 interface Props {
   sources: SourceOption[];
   categories: CategoryOption[];
   contacts: ContactOption[];
+  mode?: Mode;
+  transactionId?: string;
+  initialValues?: CreateTransactionInput;
 }
 
 function todayIso(): string {
@@ -53,15 +58,24 @@ function parseAmountToCents(raw: string | undefined | null): number {
   return Math.max(0, Math.round(value * 100));
 }
 
-export function NewTransactionForm({ sources, categories, contacts }: Props) {
+export function NewTransactionForm({
+  sources,
+  categories,
+  contacts,
+  mode = "create",
+  transactionId,
+  initialValues,
+}: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [deletePending, startDeleteTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const defaultSource = sources[0];
 
   const form = useForm<CreateTransactionInput, unknown, CreateTransactionOutput>({
     resolver: zodResolver(createTransactionSchema),
-    defaultValues: {
+    defaultValues: initialValues ?? {
       type: "expense",
       amountCents: "",
       description: "",
@@ -120,12 +134,38 @@ export function NewTransactionForm({ sources, categories, contacts }: Props) {
   function onSubmit(values: CreateTransactionOutput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await createTransaction(values);
+      const result =
+        mode === "edit" && transactionId
+          ? await updateTransaction(transactionId, values)
+          : await createTransaction(values);
       if (result && !result.ok) setServerError(result.error);
     });
   }
 
+  function onDeleteClick() {
+    if (!transactionId) return;
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+    setServerError(null);
+    startDeleteTransition(async () => {
+      const result = await deleteTransaction(transactionId);
+      if (result && !result.ok) {
+        setServerError(result.error);
+        setConfirmingDelete(false);
+      }
+    });
+  }
+
   const availableContacts = contacts.filter((c) => !fields.some((f) => f.contactId === c.id));
+
+  const title = mode === "edit" ? "Editar lançamento" : "Novo lançamento";
+  const subtitle =
+    mode === "edit"
+      ? "Ajuste valores, rateio e categoria."
+      : "Despesa, receita ou rateio entre pessoas.";
+  const submitLabel = mode === "edit" ? "Salvar alterações" : "Salvar";
 
   return (
     <div
@@ -141,12 +181,8 @@ export function NewTransactionForm({ sources, categories, contacts }: Props) {
       >
         <header className="border-outline-variant/10 p-md flex items-start justify-between border-b">
           <div>
-            <h1 className="text-headline-md text-on-surface font-sans font-semibold">
-              Novo lançamento
-            </h1>
-            <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-              Despesa, receita ou rateio entre pessoas.
-            </p>
+            <h1 className="text-headline-md text-on-surface font-sans font-semibold">{title}</h1>
+            <p className="text-label-sm text-on-surface-variant mt-xs font-mono">{subtitle}</p>
           </div>
           <Link
             href="/dashboard"
@@ -431,9 +467,27 @@ export function NewTransactionForm({ sources, categories, contacts }: Props) {
         </div>
 
         <footer className="border-outline-variant/10 p-md bg-surface/30 gap-sm flex items-center justify-between border-t">
-          <p className="text-label-sm text-on-surface-variant font-mono">
-            {watchedSource.kind === "card" ? "Vai pra fatura do cartão" : "Sai da conta"}
-          </p>
+          {mode === "edit" && transactionId ? (
+            <button
+              type="button"
+              onClick={onDeleteClick}
+              disabled={deletePending}
+              className={cn(
+                "gap-xs px-md py-sm flex items-center rounded-full font-mono text-sm transition-colors",
+                confirmingDelete
+                  ? "bg-error text-on-error font-semibold"
+                  : "text-error hover:bg-error/10",
+                "disabled:cursor-not-allowed disabled:opacity-60",
+              )}
+            >
+              <Trash2 size={14} aria-hidden />
+              {deletePending ? "Excluindo…" : confirmingDelete ? "Confirmar exclusão" : "Excluir"}
+            </button>
+          ) : (
+            <p className="text-label-sm text-on-surface-variant font-mono">
+              {watchedSource.kind === "card" ? "Vai pra fatura do cartão" : "Sai da conta"}
+            </p>
+          )}
           <div className="gap-sm flex">
             <Link
               href="/dashboard"
@@ -443,10 +497,10 @@ export function NewTransactionForm({ sources, categories, contacts }: Props) {
             </Link>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || deletePending}
               className="primary-gradient-btn px-lg py-sm rounded-full font-sans font-semibold text-white transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "Salvando…" : "Salvar"}
+              {isPending ? "Salvando…" : submitLabel}
             </button>
           </div>
         </footer>
