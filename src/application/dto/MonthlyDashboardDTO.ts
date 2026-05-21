@@ -1,0 +1,53 @@
+import type { ContactColorRole } from "@/domain/contact/Contact";
+
+export interface ContactBreakdownRow {
+  contactId: string;
+  contactName: string;
+  initial: string;
+  colorRole: ContactColorRole;
+  splitCents: number;
+  individualCents: number;
+  totalCents: number;
+}
+
+export type BadgeTone = "primary" | "tertiary" | "muted";
+
+export interface ParticipantBadge {
+  initial: string;
+  colorRole: ContactColorRole | "primary";
+}
+
+export interface RecentTransactionRow {
+  id: string;
+  description: string;
+  categoryLabel: string;
+  iconName: string;
+  whenLabel: string;
+  amountCents: number;
+  participants: ParticipantBadge[];
+  badge: {
+    text: string;
+    tone: BadgeTone;
+  };
+}
+
+export interface MonthlyDashboardDTO {
+  competence: string;
+  competenceLabel: string;
+  user: {
+    totalCents: number;
+  };
+  totalsAll: {
+    totalCents: number;
+  };
+  balance: {
+    availableCents: number;
+    deltaPct: number;
+  };
+  receivable: {
+    amountCents: number;
+    progress: number;
+  };
+  contactsBreakdown: ContactBreakdownRow[];
+  recentTransactions: RecentTransactionRow[];
+}
