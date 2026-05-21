@@ -22,7 +22,12 @@ interface Props {
   initialValues?: CreateCategoryInput;
   open: boolean;
   onClose: () => void;
-  onCreated?: (category: { id: string; name: string; iconName: string }) => void;
+  onCreated?: (category: {
+    id: string;
+    name: string;
+    iconName: string;
+    kind: "expense" | "income" | "both";
+  }) => void;
 }
 
 const ICON_OPTIONS = allowedCategoryIcons;
@@ -31,6 +36,7 @@ const DEFAULT_VALUES: CreateCategoryInput = {
   name: "",
   iconName: "Receipt",
   color: "",
+  kind: "expense",
 };
 
 export function CategoryFormDialog({
@@ -73,7 +79,12 @@ export function CategoryFormDialog({
         return;
       }
       if (mode === "create" && result.id && onCreated) {
-        onCreated({ id: result.id, name: values.name, iconName: values.iconName });
+        onCreated({
+          id: result.id,
+          name: values.name,
+          iconName: values.iconName,
+          kind: values.kind,
+        });
       }
       onClose();
     });
@@ -145,6 +156,24 @@ export function CategoryFormDialog({
               aria-invalid={Boolean(errors.name)}
             />
             <FormError>{errors.name?.message}</FormError>
+          </div>
+
+          <div>
+            <span className="text-label-sm text-outline mb-xs block font-mono tracking-wider uppercase">
+              Aplica-se a
+            </span>
+            <div className="gap-xs grid grid-cols-3">
+              {(["expense", "income", "both"] as const).map((opt) => (
+                <label
+                  key={opt}
+                  className="bg-surface-container-low border-outline-variant/30 has-[:checked]:border-primary has-[:checked]:bg-primary-container/10 has-[:checked]:text-primary text-on-surface-variant py-sm flex cursor-pointer items-center justify-center rounded-md border font-mono text-sm transition-all"
+                >
+                  <input type="radio" value={opt} className="sr-only" {...register("kind")} />
+                  {opt === "expense" ? "Despesa" : opt === "income" ? "Receita" : "Ambos"}
+                </label>
+              ))}
+            </div>
+            <FormError>{errors.kind?.message}</FormError>
           </div>
 
           <div>

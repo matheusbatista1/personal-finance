@@ -36,6 +36,7 @@ export async function createCategory(input: CreateCategoryInput): Promise<Action
       name: parsed.data.name,
       icon_name: parsed.data.iconName,
       color: parsed.data.color || null,
+      kind: parsed.data.kind,
     })
     .select("id")
     .single();
@@ -73,6 +74,7 @@ export async function updateCategory(
       name: parsed.data.name,
       icon_name: parsed.data.iconName,
       color: parsed.data.color || null,
+      kind: parsed.data.kind,
     })
     .eq("id", id)
     .eq("user_id", user.id);

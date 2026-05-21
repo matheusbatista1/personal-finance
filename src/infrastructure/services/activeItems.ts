@@ -7,6 +7,7 @@ export interface ActiveCategoryRow {
   color: string | null;
   user_id: string | null;
   is_active: boolean;
+  kind: "expense" | "income" | "both";
   effectiveActive: boolean;
 }
 
@@ -23,7 +24,7 @@ export async function fetchCategoriesForUser(
   const [catRes, overridesRes] = await Promise.all([
     supabase
       .from("categories")
-      .select("id, name, icon_name, color, user_id, is_active")
+      .select("id, name, icon_name, color, user_id, is_active, kind")
       .order("name", { ascending: true }),
     supabase.from("user_category_overrides").select("category_id, is_active"),
   ]);
@@ -40,6 +41,7 @@ export async function fetchCategoriesForUser(
     color: string | null;
     user_id: string | null;
     is_active: boolean;
+    kind: "expense" | "income" | "both";
   }>;
 
   return rows.map((row) => {

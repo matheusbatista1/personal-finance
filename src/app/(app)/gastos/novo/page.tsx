@@ -50,7 +50,11 @@ export default async function NewTransactionPage() {
     }> | null) ?? [];
 
   const contactsRows = (contactsRes.data ?? []) as Array<{ id: string; name: string }>;
-  const categoryRows = (categoriesRes.data ?? []) as Array<{ id: string; name: string }>;
+  const categoryRows = (categoriesRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    kind?: "expense" | "income" | "both";
+  }>;
 
   const sources: SourceOption[] = [
     ...walletRows.map((w) => ({
@@ -70,6 +74,7 @@ export default async function NewTransactionPage() {
   const categories: CategoryOption[] = categoryRows.map((cat) => ({
     id: cat.id,
     name: cat.name,
+    kind: cat.kind ?? "both",
   }));
 
   const contacts: ContactOption[] = contactsRows.map((contact) => ({

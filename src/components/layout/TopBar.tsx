@@ -1,8 +1,19 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { MonthQuickPicker } from "@/components/layout/MonthQuickPicker";
+import { AvatarMenu } from "@/components/layout/AvatarMenu";
+import { createClient } from "@/infrastructure/database/supabase/server";
 
-export function TopBar() {
+export async function TopBar() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  const profile = data.user
+    ? await supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle()
+    : null;
+  const displayName =
+    (profile?.data?.display_name as string | undefined) ?? data.user?.email ?? "?";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <header className="border-outline-variant/10 bg-surface/60 px-lg py-md fixed top-0 right-0 z-40 flex w-full items-center justify-between border-b backdrop-blur-xl md:ml-64 md:w-[calc(100%-256px)]">
       <div className="gap-sm flex items-center">
@@ -17,12 +28,7 @@ export function TopBar() {
         >
           <Plus size={22} aria-hidden />
         </Link>
-        <div
-          aria-hidden
-          className="border-outline-variant/20 bg-surface-container-high text-label-sm text-primary flex h-10 w-10 items-center justify-center rounded-full border font-mono font-semibold"
-        >
-          MB
-        </div>
+        <AvatarMenu initial={initial} />
       </div>
     </header>
   );

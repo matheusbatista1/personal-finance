@@ -34,6 +34,7 @@ export interface SourceOption {
 export interface CategoryOption {
   id: string;
   name: string;
+  kind: "expense" | "income" | "both";
 }
 
 export interface ContactOption {
@@ -351,11 +352,13 @@ export function NewTransactionForm({
                   {...register("categoryId")}
                 >
                   <option value="">Sem categoria</option>
-                  {localCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  {localCategories
+                    .filter((cat) => cat.kind === "both" || cat.kind === watchedType)
+                    .map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
                 </select>
                 <button
                   type="button"
@@ -469,159 +472,163 @@ export function NewTransactionForm({
             ) : null}
           </div>
 
-          <section className="glass-panel p-md gap-md flex flex-col rounded-xl">
-            <div className="flex items-center justify-between">
-              <div className="gap-sm flex items-center">
-                <div className="bg-surface-container text-primary flex h-8 w-8 items-center justify-center rounded-full">
-                  <Users size={16} aria-hidden />
+          {watchedType === "expense" ? (
+            <section className="glass-panel p-md gap-md flex flex-col rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="gap-sm flex items-center">
+                  <div className="bg-surface-container text-primary flex h-8 w-8 items-center justify-center rounded-full">
+                    <Users size={16} aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="text-body-lg text-on-surface font-sans font-semibold">Rateio</h3>
+                    <p className="text-label-sm text-on-surface-variant font-mono">
+                      {splitEnabled
+                        ? `${fields.length} ${fields.length === 1 ? "pessoa" : "pessoas"}`
+                        : "Sem rateio"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-body-lg text-on-surface font-sans font-semibold">Rateio</h3>
-                  <p className="text-label-sm text-on-surface-variant font-mono">
-                    {splitEnabled
-                      ? `${fields.length} ${fields.length === 1 ? "pessoa" : "pessoas"}`
-                      : "Sem rateio"}
-                  </p>
-                </div>
-              </div>
-              <label className="gap-sm flex cursor-pointer items-center select-none">
-                <span className="text-label-sm text-on-surface-variant font-mono">Dividido</span>
-                <input type="checkbox" className="sr-only" {...register("userIncludedInSplit")} />
-                <span
-                  className={cn(
-                    "relative inline-block h-6 w-12 cursor-pointer rounded-full border transition-colors",
-                    watchedDividido
-                      ? "bg-primary-container/40 border-primary/40"
-                      : "bg-surface-container-highest border-outline-variant/30",
-                  )}
-                >
+                <label className="gap-sm flex cursor-pointer items-center select-none">
+                  <span className="text-label-sm text-on-surface-variant font-mono">Dividido</span>
+                  <input type="checkbox" className="sr-only" {...register("userIncludedInSplit")} />
                   <span
                     className={cn(
-                      "absolute top-1 h-4 w-4 rounded-full transition-all",
-                      watchedDividido ? "bg-primary right-1" : "bg-on-surface-variant left-1",
+                      "relative inline-block h-6 w-12 cursor-pointer rounded-full border transition-colors",
+                      watchedDividido
+                        ? "bg-primary-container/40 border-primary/40"
+                        : "bg-surface-container-highest border-outline-variant/30",
                     )}
-                  />
-                </span>
-              </label>
-            </div>
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-1 h-4 w-4 rounded-full transition-all",
+                        watchedDividido ? "bg-primary right-1" : "bg-on-surface-variant left-1",
+                      )}
+                    />
+                  </span>
+                </label>
+              </div>
 
-            {splitEnabled ? (
-              <ul className="gap-sm flex flex-col">
-                {fields.map((field, index) => {
-                  const contact = contacts.find((c) => c.id === field.contactId);
-                  if (!contact) return null;
-                  const splitId = splitIdByContact.get(field.contactId);
-                  const settledAt = settlementState[field.contactId] ?? null;
-                  const isSettled = Boolean(settledAt);
-                  const isToggling = settlePendingId === splitId;
-                  return (
-                    <li
-                      key={field.id}
-                      className="bg-surface-container-low gap-sm p-sm flex items-center rounded-lg"
-                    >
-                      <div className="bg-primary-container/20 text-primary flex h-9 w-9 items-center justify-center rounded-full font-mono text-sm font-semibold">
-                        {contact.initial}
-                      </div>
-                      <span className="text-body-md text-on-surface flex-1 font-sans font-medium">
-                        {contact.name}
-                      </span>
-                      {mode === "edit" && splitId ? (
+              {splitEnabled ? (
+                <ul className="gap-sm flex flex-col">
+                  {fields.map((field, index) => {
+                    const contact = contacts.find((c) => c.id === field.contactId);
+                    if (!contact) return null;
+                    const splitId = splitIdByContact.get(field.contactId);
+                    const settledAt = settlementState[field.contactId] ?? null;
+                    const isSettled = Boolean(settledAt);
+                    const isToggling = settlePendingId === splitId;
+                    return (
+                      <li
+                        key={field.id}
+                        className="bg-surface-container-low gap-sm p-sm flex items-center rounded-lg"
+                      >
+                        <div className="bg-primary-container/20 text-primary flex h-9 w-9 items-center justify-center rounded-full font-mono text-sm font-semibold">
+                          {contact.initial}
+                        </div>
+                        <span className="text-body-md text-on-surface flex-1 font-sans font-medium">
+                          {contact.name}
+                        </span>
+                        {mode === "edit" && splitId ? (
+                          <button
+                            type="button"
+                            onClick={() => onToggleSettled(field.contactId)}
+                            disabled={isToggling}
+                            aria-pressed={isSettled}
+                            title={isSettled ? "Marcar como pendente" : "Marcar como pago"}
+                            className={cn(
+                              "gap-xs flex items-center rounded-full border px-2 py-1 font-mono text-[11px] transition-colors disabled:opacity-60",
+                              isSettled
+                                ? "border-tertiary/40 bg-tertiary/10 text-tertiary"
+                                : "border-outline-variant/30 text-on-surface-variant hover:border-tertiary/40 hover:text-tertiary",
+                            )}
+                          >
+                            {isSettled ? (
+                              <RotateCcw size={12} aria-hidden />
+                            ) : (
+                              <Check size={12} aria-hidden />
+                            )}
+                            {isSettled ? "Pago" : "Marcar pago"}
+                          </button>
+                        ) : null}
+                        <div className="gap-xs flex items-center">
+                          <span className="text-label-sm text-on-surface-variant font-mono">
+                            R$
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="Igual"
+                            className="bg-surface-container border-outline-variant/30 focus:border-primary text-on-surface w-24 rounded-md border-b px-2 py-1 text-right font-mono text-sm outline-none focus:ring-0"
+                            {...register(`participants.${index}.customAmountCents`)}
+                          />
+                        </div>
                         <button
                           type="button"
-                          onClick={() => onToggleSettled(field.contactId)}
-                          disabled={isToggling}
-                          aria-pressed={isSettled}
-                          title={isSettled ? "Marcar como pendente" : "Marcar como pago"}
-                          className={cn(
-                            "gap-xs flex items-center rounded-full border px-2 py-1 font-mono text-[11px] transition-colors disabled:opacity-60",
-                            isSettled
-                              ? "border-tertiary/40 bg-tertiary/10 text-tertiary"
-                              : "border-outline-variant/30 text-on-surface-variant hover:border-tertiary/40 hover:text-tertiary",
-                          )}
+                          onClick={() => remove(index)}
+                          aria-label={`Remover ${contact.name}`}
+                          className="text-on-surface-variant hover:text-error transition-colors"
                         >
-                          {isSettled ? (
-                            <RotateCcw size={12} aria-hidden />
-                          ) : (
-                            <Check size={12} aria-hidden />
-                          )}
-                          {isSettled ? "Pago" : "Marcar pago"}
+                          <X size={16} aria-hidden />
                         </button>
-                      ) : null}
-                      <div className="gap-xs flex items-center">
-                        <span className="text-label-sm text-on-surface-variant font-mono">R$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          placeholder="Igual"
-                          className="bg-surface-container border-outline-variant/30 focus:border-primary text-on-surface w-24 rounded-md border-b px-2 py-1 text-right font-mono text-sm outline-none focus:ring-0"
-                          {...register(`participants.${index}.customAmountCents`)}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        aria-label={`Remover ${contact.name}`}
-                        className="text-on-surface-variant hover:text-error transition-colors"
-                      >
-                        <X size={16} aria-hidden />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-
-            {availableContacts.length > 0 ? (
-              <div className="gap-xs flex flex-wrap">
-                {availableContacts.map((contact) => (
-                  <button
-                    key={contact.id}
-                    type="button"
-                    onClick={() => append({ contactId: contact.id, customAmountCents: "" })}
-                    className="border-outline-variant/30 hover:border-primary/50 hover:text-primary text-on-surface-variant gap-xs flex items-center rounded-full border px-3 py-1 font-mono text-sm transition-colors"
-                  >
-                    <Plus size={14} aria-hidden />
-                    {contact.name}
-                  </button>
-                ))}
-              </div>
-            ) : contacts.length === 0 ? (
-              <p className="text-label-sm text-on-surface-variant font-mono">
-                Cadastre pessoas em{" "}
-                <Link href="/pessoas" className="text-primary hover:underline">
-                  /pessoas
-                </Link>{" "}
-                para usar o rateio.
-              </p>
-            ) : null}
-
-            {liveSplit && "error" in liveSplit ? (
-              <FormError>{liveSplit.error}</FormError>
-            ) : liveSplit && liveSplit.userShareCents !== null ? (
-              <div className="bg-surface-container-low p-sm rounded-lg">
-                <p className="text-label-sm text-on-surface-variant mb-xs font-mono uppercase">
-                  Prévia do rateio
-                </p>
-                <div className="gap-xs flex flex-col">
-                  <PreviewRow
-                    label="Você"
-                    amountCents={liveSplit.userShareCents}
-                    accent="primary"
-                  />
-                  {liveSplit.splits.map((split) => {
-                    const contact = contacts.find((c) => c.id === split.contactId);
-                    return (
-                      <PreviewRow
-                        key={split.contactId}
-                        label={contact?.name ?? "?"}
-                        amountCents={split.amountCents}
-                      />
+                      </li>
                     );
                   })}
+                </ul>
+              ) : null}
+
+              {availableContacts.length > 0 ? (
+                <div className="gap-xs flex flex-wrap">
+                  {availableContacts.map((contact) => (
+                    <button
+                      key={contact.id}
+                      type="button"
+                      onClick={() => append({ contactId: contact.id, customAmountCents: "" })}
+                      className="border-outline-variant/30 hover:border-primary/50 hover:text-primary text-on-surface-variant gap-xs flex items-center rounded-full border px-3 py-1 font-mono text-sm transition-colors"
+                    >
+                      <Plus size={14} aria-hidden />
+                      {contact.name}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            ) : null}
-          </section>
+              ) : contacts.length === 0 ? (
+                <p className="text-label-sm text-on-surface-variant font-mono">
+                  Cadastre pessoas em{" "}
+                  <Link href="/pessoas" className="text-primary hover:underline">
+                    /pessoas
+                  </Link>{" "}
+                  para usar o rateio.
+                </p>
+              ) : null}
+
+              {liveSplit && "error" in liveSplit ? (
+                <FormError>{liveSplit.error}</FormError>
+              ) : liveSplit && liveSplit.userShareCents !== null ? (
+                <div className="bg-surface-container-low p-sm rounded-lg">
+                  <p className="text-label-sm text-on-surface-variant mb-xs font-mono uppercase">
+                    Prévia do rateio
+                  </p>
+                  <div className="gap-xs flex flex-col">
+                    <PreviewRow
+                      label="Você"
+                      amountCents={liveSplit.userShareCents}
+                      accent="primary"
+                    />
+                    {liveSplit.splits.map((split) => {
+                      const contact = contacts.find((c) => c.id === split.contactId);
+                      return (
+                        <PreviewRow
+                          key={split.contactId}
+                          label={contact?.name ?? "?"}
+                          amountCents={split.amountCents}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {serverError ? <FormError>{serverError}</FormError> : null}
         </div>
@@ -670,7 +677,7 @@ export function NewTransactionForm({
         open={categoryDialogOpen}
         onClose={() => setCategoryDialogOpen(false)}
         onCreated={(cat) => {
-          setLocalCategories((prev) => [...prev, { id: cat.id, name: cat.name }]);
+          setLocalCategories((prev) => [...prev, { id: cat.id, name: cat.name, kind: cat.kind }]);
           setValue("categoryId", cat.id, { shouldDirty: true });
         }}
       />

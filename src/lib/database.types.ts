@@ -112,6 +112,7 @@ export type Database = {
           icon_name: string | null;
           id: string;
           is_active: boolean;
+          kind: Database["public"]["Enums"]["category_kind"];
           name: string;
           user_id: string | null;
         };
@@ -121,6 +122,7 @@ export type Database = {
           icon_name?: string | null;
           id?: string;
           is_active?: boolean;
+          kind?: Database["public"]["Enums"]["category_kind"];
           name: string;
           user_id?: string | null;
         };
@@ -130,6 +132,7 @@ export type Database = {
           icon_name?: string | null;
           id?: string;
           is_active?: boolean;
+          kind?: Database["public"]["Enums"]["category_kind"];
           name?: string;
           user_id?: string | null;
         };
@@ -464,6 +467,7 @@ export type Database = {
     };
     Enums: {
       account_type: "PF" | "PJ";
+      category_kind: "expense" | "income" | "both";
       operation_type: "card" | "loan" | "pix";
       split_mode: "none" | "equal" | "custom";
       transaction_type: "income" | "expense";
@@ -596,6 +600,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["PF", "PJ"],
+      category_kind: ["expense", "income", "both"],
       operation_type: ["card", "loan", "pix"],
       split_mode: ["none", "equal", "custom"],
       transaction_type: ["income", "expense"],

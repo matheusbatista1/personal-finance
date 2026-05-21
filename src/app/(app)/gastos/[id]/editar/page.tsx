@@ -80,7 +80,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
       .select("id, name, wallets(name)")
       .order("created_at", { ascending: true }),
     supabase.from("contacts").select("id, name").order("name"),
-    supabase.from("categories").select("id, name").order("name"),
+    supabase.from("categories").select("id, name, kind").order("name"),
   ]);
 
   const tx = txRes.data as TransactionRow | null;
@@ -105,7 +105,11 @@ export default async function EditTransactionPage({ params }: PageProps) {
     }> | null) ?? [];
 
   const contactsRows = (contactsRes.data ?? []) as Array<{ id: string; name: string }>;
-  const categoryRows = (categoriesRes.data ?? []) as Array<{ id: string; name: string }>;
+  const categoryRows = (categoriesRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    kind?: "expense" | "income" | "both";
+  }>;
 
   const sources: SourceOption[] = [
     ...walletRows.map((w) => ({
@@ -122,7 +126,11 @@ export default async function EditTransactionPage({ params }: PageProps) {
     })),
   ];
 
-  const categories: CategoryOption[] = categoryRows.map((cat) => ({ id: cat.id, name: cat.name }));
+  const categories: CategoryOption[] = categoryRows.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    kind: cat.kind ?? "both",
+  }));
   const contacts: ContactOption[] = contactsRows.map((contact) => ({
     id: contact.id,
     name: contact.name,
