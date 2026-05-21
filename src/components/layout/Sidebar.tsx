@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Receipt, Settings, Users, Wallet, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  LogOut,
+  Receipt,
+  Settings,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/actions/auth";
 
 interface NavItem {
   href: string;
@@ -57,13 +66,24 @@ export function Sidebar() {
           })}
         </div>
 
-        <Link
-          href="/configuracoes"
-          className="gap-sm px-sm py-sm text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface mt-auto flex scale-95 items-center rounded-lg transition-all duration-300 active:scale-90"
-        >
-          <Settings size={20} aria-hidden />
-          <span className="text-body-md">Configurações</span>
-        </Link>
+        <div className="gap-xs mt-auto flex flex-col">
+          <Link
+            href="/configuracoes"
+            className="gap-sm px-sm py-sm text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface flex scale-95 items-center rounded-lg transition-all duration-300 active:scale-90"
+          >
+            <Settings size={20} aria-hidden />
+            <span className="text-body-md">Configurações</span>
+          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="gap-sm px-sm py-sm text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface flex w-full scale-95 items-center rounded-lg text-left transition-all duration-300 active:scale-90"
+            >
+              <LogOut size={20} aria-hidden />
+              <span className="text-body-md">Sair</span>
+            </button>
+          </form>
+        </div>
       </div>
     </nav>
   );
