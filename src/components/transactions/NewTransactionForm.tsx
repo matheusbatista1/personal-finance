@@ -85,6 +85,7 @@ export function NewTransactionForm({
         ? { kind: defaultSource.kind, id: defaultSource.id }
         : { kind: "wallet", id: "" },
       operation: "",
+      installmentTotal: 1,
       userIncludedInSplit: true,
       participants: [],
     },
@@ -334,24 +335,45 @@ export function NewTransactionForm({
             <FormError>{errors.source?.message as string | undefined}</FormError>
           </div>
 
-          <div>
-            <label
-              htmlFor="operation"
-              className="text-label-sm text-on-surface-variant mb-xs block font-mono tracking-wider uppercase"
-            >
-              Operação (opcional)
-            </label>
-            <select
-              id="operation"
-              className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm w-full rounded-md border-b font-sans outline-none focus:ring-0"
-              {...register("operation")}
-            >
-              <option value="">Sem operação</option>
-              <option value="card">Cartão de outra pessoa</option>
-              <option value="pix">Pix</option>
-              <option value="loan">Empréstimo</option>
-            </select>
-            <FormError>{errors.operation?.message}</FormError>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            <div>
+              <label
+                htmlFor="operation"
+                className="text-label-sm text-on-surface-variant mb-xs block font-mono tracking-wider uppercase"
+              >
+                Operação (opcional)
+              </label>
+              <select
+                id="operation"
+                className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm w-full rounded-md border-b font-sans outline-none focus:ring-0"
+                {...register("operation")}
+              >
+                <option value="">Sem operação</option>
+                <option value="card">Cartão de outra pessoa</option>
+                <option value="pix">Pix</option>
+                <option value="loan">Empréstimo</option>
+              </select>
+              <FormError>{errors.operation?.message}</FormError>
+            </div>
+            {watchedSource.kind === "card" && mode === "create" ? (
+              <div>
+                <label
+                  htmlFor="installmentTotal"
+                  className="text-label-sm text-on-surface-variant mb-xs block font-mono tracking-wider uppercase"
+                >
+                  Parcelas
+                </label>
+                <Input
+                  id="installmentTotal"
+                  type="number"
+                  min={1}
+                  max={36}
+                  {...register("installmentTotal")}
+                  aria-invalid={Boolean(errors.installmentTotal)}
+                />
+                <FormError>{errors.installmentTotal?.message}</FormError>
+              </div>
+            ) : null}
           </div>
 
           <section className="glass-panel p-md gap-md flex flex-col rounded-xl">

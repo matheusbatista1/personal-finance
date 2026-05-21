@@ -36,6 +36,12 @@ const splitParticipantSchema = z.object({
   customAmountCents: optionalMoneyCentsSchema,
 });
 
+const installmentSchema = z.coerce
+  .number()
+  .int("Use um número inteiro.")
+  .min(1, "Mínimo 1.")
+  .max(36, "Máximo 36.");
+
 export const createTransactionSchema = z.object({
   type: z.enum(["expense", "income"]),
   amountCents: moneyCentsSchema,
@@ -44,6 +50,7 @@ export const createTransactionSchema = z.object({
   categoryId: z.string().uuid("Categoria obrigatória.").optional().or(z.literal("")),
   source: transactionSourceSchema,
   operation: z.enum(["card", "loan", "pix"]).optional().or(z.literal("")),
+  installmentTotal: installmentSchema.default(1),
   userIncludedInSplit: z.boolean(),
   participants: z.array(splitParticipantSchema),
 });

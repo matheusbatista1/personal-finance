@@ -141,6 +141,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
     categoryId: tx.category_id ?? "",
     source,
     operation: tx.operation ?? "",
+    installmentTotal: 1,
     userIncludedInSplit: tx.user_included_in_split,
     participants,
   };

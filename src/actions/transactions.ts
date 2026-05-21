@@ -19,6 +19,7 @@ const transactionPayloadSchema = z.object({
     z.object({ kind: z.literal("card"), id: z.string().uuid() }),
   ]),
   operation: z.enum(["card", "loan", "pix"]).optional().or(z.literal("")),
+  installmentTotal: z.number().int().min(1).max(36),
   userIncludedInSplit: z.boolean(),
   participants: z.array(
     z.object({
@@ -32,22 +33,51 @@ export type ActionResult =
   | { ok: true }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
-interface PreparedTransaction {
-  payload: {
-    user_id: string;
-    wallet_id: string | null;
-    card_id: string | null;
-    category_id: string | null;
-    amount_cents: number;
-    description: string;
-    occurred_at: string;
-    type: "expense" | "income";
-    operation: "card" | "loan" | "pix" | null;
-    split_mode: "none" | "equal" | "custom";
-    user_included_in_split: boolean;
-    user_share_cents: number;
-  };
+type TransactionPayload = {
+  user_id: string;
+  wallet_id: string | null;
+  card_id: string | null;
+  category_id: string | null;
+  amount_cents: number;
+  description: string;
+  occurred_at: string;
+  type: "expense" | "income";
+  operation: "card" | "loan" | "pix" | null;
+  split_mode: "none" | "equal" | "custom";
+  user_included_in_split: boolean;
+  user_share_cents: number;
+  installment_number: number;
+  installment_total: number;
+};
+
+interface PreparedInstallment {
+  payload: TransactionPayload;
   splits: Array<{ user_id: string; contact_id: string; amount_cents: number }>;
+}
+
+interface PreparedTransaction {
+  installments: PreparedInstallment[];
+  primaryCardId: string | null;
+}
+
+/** Split `total` into `n` integer chunks summing back to `total`. Leftover cents land on chunk 0. */
+function distributeCents(total: number, n: number): number[] {
+  if (n <= 1) return [total];
+  const base = Math.floor(total / n);
+  const leftover = total - base * n;
+  const out = Array(n).fill(base);
+  out[0] += leftover;
+  return out;
+}
+
+function shiftMonth(isoDate: string, months: number): string {
+  const [year, month, day] = isoDate.slice(0, 10).split("-").map(Number);
+  const targetMonth0 = month - 1 + months;
+  const targetYear = year + Math.floor(targetMonth0 / 12);
+  const wrappedMonth0 = ((targetMonth0 % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, wrappedMonth0 + 1, 0)).getUTCDate();
+  const safeDay = Math.min(day, lastDay);
+  return `${targetYear}-${String(wrappedMonth0 + 1).padStart(2, "0")}-${String(safeDay).padStart(2, "0")}`;
 }
 
 async function prepareTransaction(
@@ -70,6 +100,9 @@ async function prepareTransaction(
     return { ok: false, result: { ok: false, error: "Informe um valor maior que zero." } };
   }
 
+  // Parcelamento só faz sentido em cartão; pra wallet força 1 parcela.
+  const installmentTotal = data.source.kind === "card" ? data.installmentTotal : 1;
+
   let split;
   try {
     split = calculateSplit({
@@ -86,28 +119,49 @@ async function prepareTransaction(
 
   const user = await requireUser();
 
+  const amountSlices = distributeCents(data.amountCents, installmentTotal);
+  const userShareSlices = distributeCents(split.userShareCents, installmentTotal);
+  const splitSlices = split.splits.map((s) => ({
+    contactId: s.contactId,
+    slices: distributeCents(s.amountCents, installmentTotal),
+  }));
+
+  const installments: PreparedInstallment[] = [];
+
+  for (let i = 0; i < installmentTotal; i++) {
+    const payload: TransactionPayload = {
+      user_id: user.id,
+      wallet_id: data.source.kind === "wallet" ? data.source.id : null,
+      card_id: data.source.kind === "card" ? data.source.id : null,
+      category_id: data.categoryId || null,
+      amount_cents: amountSlices[i] ?? 0,
+      description: data.description || "",
+      occurred_at: shiftMonth(data.occurredAt, i),
+      type: data.type,
+      operation: data.operation || null,
+      split_mode: split.mode,
+      user_included_in_split: data.userIncludedInSplit,
+      user_share_cents: userShareSlices[i] ?? 0,
+      installment_number: i + 1,
+      installment_total: installmentTotal,
+    };
+
+    const splits = splitSlices
+      .map((s) => ({
+        user_id: user.id,
+        contact_id: s.contactId,
+        amount_cents: s.slices[i] ?? 0,
+      }))
+      .filter((row) => row.amount_cents > 0 || installmentTotal === 1);
+
+    installments.push({ payload, splits });
+  }
+
   return {
     ok: true,
     data: {
-      payload: {
-        user_id: user.id,
-        wallet_id: data.source.kind === "wallet" ? data.source.id : null,
-        card_id: data.source.kind === "card" ? data.source.id : null,
-        category_id: data.categoryId || null,
-        amount_cents: data.amountCents,
-        description: data.description || "",
-        occurred_at: data.occurredAt,
-        type: data.type,
-        operation: data.operation || null,
-        split_mode: split.mode,
-        user_included_in_split: data.userIncludedInSplit,
-        user_share_cents: split.userShareCents,
-      },
-      splits: split.splits.map((s) => ({
-        user_id: user.id,
-        contact_id: s.contactId,
-        amount_cents: s.amountCents,
-      })),
+      installments,
+      primaryCardId: data.source.kind === "card" ? data.source.id : null,
     },
   };
 }
@@ -115,6 +169,7 @@ async function prepareTransaction(
 function revalidateAfterMutation(cardId: string | null) {
   revalidatePath("/dashboard");
   revalidatePath("/carteira");
+  revalidatePath("/transacoes");
   if (cardId) revalidatePath(`/fatura/${cardId}`);
 }
 
@@ -123,26 +178,35 @@ export async function createTransaction(input: CreateTransactionOutput): Promise
   if (!prepared.ok) return prepared.result;
 
   const supabase = await createClient();
-  const { data: inserted, error: insertError } = await supabase
-    .from("transactions")
-    .insert(prepared.data.payload)
-    .select("id")
-    .single();
+  const insertedIds: string[] = [];
 
-  if (insertError || !inserted) {
-    return { ok: false, error: "Não foi possível salvar a transação." };
-  }
+  for (const installment of prepared.data.installments) {
+    const { data: inserted, error: insertError } = await supabase
+      .from("transactions")
+      .insert(installment.payload)
+      .select("id")
+      .single();
 
-  if (prepared.data.splits.length > 0) {
-    const rows = prepared.data.splits.map((s) => ({ ...s, transaction_id: inserted.id }));
-    const { error: splitsError } = await supabase.from("transaction_splits").insert(rows);
-    if (splitsError) {
-      await supabase.from("transactions").delete().eq("id", inserted.id);
-      return { ok: false, error: "Não foi possível salvar o rateio." };
+    if (insertError || !inserted) {
+      if (insertedIds.length > 0) {
+        await supabase.from("transactions").delete().in("id", insertedIds);
+      }
+      return { ok: false, error: "Não foi possível salvar a transação." };
+    }
+
+    insertedIds.push(inserted.id);
+
+    if (installment.splits.length > 0) {
+      const rows = installment.splits.map((s) => ({ ...s, transaction_id: inserted.id }));
+      const { error: splitsError } = await supabase.from("transaction_splits").insert(rows);
+      if (splitsError) {
+        await supabase.from("transactions").delete().in("id", insertedIds);
+        return { ok: false, error: "Não foi possível salvar o rateio." };
+      }
     }
   }
 
-  revalidateAfterMutation(prepared.data.payload.card_id);
+  revalidateAfterMutation(prepared.data.primaryCardId);
   redirect("/dashboard");
 }
 
@@ -150,14 +214,25 @@ export async function updateTransaction(
   id: string,
   input: CreateTransactionOutput,
 ): Promise<ActionResult> {
-  const prepared = await prepareTransaction(input);
+  // Edição não muda número de parcelas — força installmentTotal=1 pra editar somente esta linha.
+  const prepared = await prepareTransaction({ ...input, installmentTotal: 1 });
   if (!prepared.ok) return prepared.result;
+
+  const installment = prepared.data.installments[0];
+  if (!installment) return { ok: false, error: "Falha ao preparar edição." };
 
   const supabase = await createClient();
 
+  // Preserva installment_number/total originais — só atualiza demais campos.
+  const {
+    installment_number: _ignored1,
+    installment_total: _ignored2,
+    ...mutablePayload
+  } = installment.payload;
+
   const { error: updateError } = await supabase
     .from("transactions")
-    .update(prepared.data.payload)
+    .update(mutablePayload)
     .eq("id", id);
 
   if (updateError) {
@@ -172,15 +247,15 @@ export async function updateTransaction(
     return { ok: false, error: "Não foi possível atualizar o rateio." };
   }
 
-  if (prepared.data.splits.length > 0) {
-    const rows = prepared.data.splits.map((s) => ({ ...s, transaction_id: id }));
+  if (installment.splits.length > 0) {
+    const rows = installment.splits.map((s) => ({ ...s, transaction_id: id }));
     const { error: splitsError } = await supabase.from("transaction_splits").insert(rows);
     if (splitsError) {
       return { ok: false, error: "Não foi possível salvar o rateio." };
     }
   }
 
-  revalidateAfterMutation(prepared.data.payload.card_id);
+  revalidateAfterMutation(prepared.data.primaryCardId);
   redirect("/dashboard");
 }
 
