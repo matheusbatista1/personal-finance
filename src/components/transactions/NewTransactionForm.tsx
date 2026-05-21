@@ -4,10 +4,15 @@ import { useMemo, useState, useTransition } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { X, Wallet, CreditCard, Users, Plus, Trash2 } from "lucide-react";
+import { X, Wallet, CreditCard, Users, Plus, Trash2, Check, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
-import { createTransaction, deleteTransaction, updateTransaction } from "@/actions/transactions";
+import {
+  createTransaction,
+  deleteTransaction,
+  toggleSplitSettlement,
+  updateTransaction,
+} from "@/actions/transactions";
 import {
   createTransactionSchema,
   type CreateTransactionInput,
@@ -35,6 +40,12 @@ export interface ContactOption {
   initial: string;
 }
 
+export interface ExistingSplit {
+  id: string;
+  contactId: string;
+  settledAt: string | null;
+}
+
 type Mode = "create" | "edit";
 
 interface Props {
@@ -44,6 +55,7 @@ interface Props {
   mode?: Mode;
   transactionId?: string;
   initialValues?: CreateTransactionInput;
+  existingSplits?: ExistingSplit[];
 }
 
 function todayIso(): string {
@@ -65,11 +77,43 @@ export function NewTransactionForm({
   mode = "create",
   transactionId,
   initialValues,
+  existingSplits,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [settlePendingId, setSettlePendingId] = useState<string | null>(null);
+  const [settlementState, setSettlementState] = useState<Record<string, string | null>>(() => {
+    const initial: Record<string, string | null> = {};
+    for (const split of existingSplits ?? []) {
+      initial[split.contactId] = split.settledAt;
+    }
+    return initial;
+  });
+
+  const splitIdByContact = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const split of existingSplits ?? []) {
+      map.set(split.contactId, split.id);
+    }
+    return map;
+  }, [existingSplits]);
+
+  function onToggleSettled(contactId: string) {
+    const splitId = splitIdByContact.get(contactId);
+    if (!splitId) return;
+    setSettlePendingId(splitId);
+    void toggleSplitSettlement(splitId).then((result) => {
+      if (result.ok) {
+        setSettlementState((prev) => ({
+          ...prev,
+          [contactId]: prev[contactId] ? null : new Date().toISOString(),
+        }));
+      }
+      setSettlePendingId(null);
+    });
+  }
 
   const defaultSource = sources[0];
 
@@ -419,6 +463,10 @@ export function NewTransactionForm({
                 {fields.map((field, index) => {
                   const contact = contacts.find((c) => c.id === field.contactId);
                   if (!contact) return null;
+                  const splitId = splitIdByContact.get(field.contactId);
+                  const settledAt = settlementState[field.contactId] ?? null;
+                  const isSettled = Boolean(settledAt);
+                  const isToggling = settlePendingId === splitId;
                   return (
                     <li
                       key={field.id}
@@ -430,6 +478,28 @@ export function NewTransactionForm({
                       <span className="text-body-md text-on-surface flex-1 font-sans font-medium">
                         {contact.name}
                       </span>
+                      {mode === "edit" && splitId ? (
+                        <button
+                          type="button"
+                          onClick={() => onToggleSettled(field.contactId)}
+                          disabled={isToggling}
+                          aria-pressed={isSettled}
+                          title={isSettled ? "Marcar como pendente" : "Marcar como pago"}
+                          className={cn(
+                            "gap-xs flex items-center rounded-full border px-2 py-1 font-mono text-[11px] transition-colors disabled:opacity-60",
+                            isSettled
+                              ? "border-tertiary/40 bg-tertiary/10 text-tertiary"
+                              : "border-outline-variant/30 text-on-surface-variant hover:border-tertiary/40 hover:text-tertiary",
+                          )}
+                        >
+                          {isSettled ? (
+                            <RotateCcw size={12} aria-hidden />
+                          ) : (
+                            <Check size={12} aria-hidden />
+                          )}
+                          {isSettled ? "Pago" : "Marcar pago"}
+                        </button>
+                      ) : null}
                       <div className="gap-xs flex items-center">
                         <span className="text-label-sm text-on-surface-variant font-mono">R$</span>
                         <input

@@ -5,6 +5,7 @@ import {
   NewTransactionForm,
   type CategoryOption,
   type ContactOption,
+  type ExistingSplit,
   type SourceOption,
 } from "@/components/transactions/NewTransactionForm";
 import type { CreateTransactionInput } from "@/application/validation/transaction";
@@ -32,8 +33,11 @@ interface TransactionRow {
 }
 
 interface SplitRow {
+  id: string;
   contact_id: string;
   amount_cents: number | string;
+  is_custom: boolean;
+  settled_at: string | null;
 }
 
 function toNumber(value: number | string): number {
@@ -59,7 +63,10 @@ export default async function EditTransactionPage({ params }: PageProps) {
       )
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("transaction_splits").select("contact_id, amount_cents").eq("transaction_id", id),
+    supabase
+      .from("transaction_splits")
+      .select("id, contact_id, amount_cents, is_custom, settled_at")
+      .eq("transaction_id", id),
     supabase
       .from("wallets")
       .select("id, name, account_type, is_default, banks(name)")
@@ -129,8 +136,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
 
   const participants: CreateTransactionInput["participants"] = splits.map((s) => ({
     contactId: s.contact_id,
-    customAmountCents:
-      tx.split_mode === "custom" ? formatCentsForInput(toNumber(s.amount_cents)) : "",
+    customAmountCents: s.is_custom ? formatCentsForInput(toNumber(s.amount_cents)) : "",
   }));
 
   const initialValues: CreateTransactionInput = {
@@ -146,6 +152,12 @@ export default async function EditTransactionPage({ params }: PageProps) {
     participants,
   };
 
+  const existingSplits: ExistingSplit[] = splits.map((s) => ({
+    id: s.id,
+    contactId: s.contact_id,
+    settledAt: s.settled_at,
+  }));
+
   return (
     <NewTransactionForm
       mode="edit"
@@ -154,6 +166,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
       sources={sources}
       categories={categories}
       contacts={contacts}
+      existingSplits={existingSplits}
     />
   );
 }

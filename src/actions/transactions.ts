@@ -52,7 +52,12 @@ type TransactionPayload = {
 
 interface PreparedInstallment {
   payload: TransactionPayload;
-  splits: Array<{ user_id: string; contact_id: string; amount_cents: number }>;
+  splits: Array<{
+    user_id: string;
+    contact_id: string;
+    amount_cents: number;
+    is_custom: boolean;
+  }>;
 }
 
 interface PreparedTransaction {
@@ -121,9 +126,14 @@ async function prepareTransaction(
 
   const amountSlices = distributeCents(data.amountCents, installmentTotal);
   const userShareSlices = distributeCents(split.userShareCents, installmentTotal);
+  const customByContact = new Map<string, boolean>();
+  for (const p of data.participants) {
+    customByContact.set(p.contactId, p.customAmountCents != null && p.customAmountCents > 0);
+  }
   const splitSlices = split.splits.map((s) => ({
     contactId: s.contactId,
     slices: distributeCents(s.amountCents, installmentTotal),
+    isCustom: customByContact.get(s.contactId) ?? false,
   }));
 
   const installments: PreparedInstallment[] = [];
@@ -151,6 +161,7 @@ async function prepareTransaction(
         user_id: user.id,
         contact_id: s.contactId,
         amount_cents: s.slices[i] ?? 0,
+        is_custom: s.isCustom,
       }))
       .filter((row) => row.amount_cents > 0 || installmentTotal === 1);
 
@@ -239,6 +250,16 @@ export async function updateTransaction(
     return { ok: false, error: "Não foi possível atualizar a transação." };
   }
 
+  // Preserve "Arthur já pagou" status across edits: capture existing settled_at
+  // per contact before deleting, then restore on re-insert.
+  const { data: oldSplits } = await supabase
+    .from("transaction_splits")
+    .select("contact_id, settled_at")
+    .eq("transaction_id", id);
+  const settledByContact = new Map<string, string | null>(
+    (oldSplits ?? []).map((s) => [s.contact_id as string, (s.settled_at as string | null) ?? null]),
+  );
+
   const { error: deleteSplitsError } = await supabase
     .from("transaction_splits")
     .delete()
@@ -248,7 +269,11 @@ export async function updateTransaction(
   }
 
   if (installment.splits.length > 0) {
-    const rows = installment.splits.map((s) => ({ ...s, transaction_id: id }));
+    const rows = installment.splits.map((s) => ({
+      ...s,
+      transaction_id: id,
+      settled_at: settledByContact.get(s.contact_id) ?? null,
+    }));
     const { error: splitsError } = await supabase.from("transaction_splits").insert(rows);
     if (splitsError) {
       return { ok: false, error: "Não foi possível salvar o rateio." };
@@ -276,4 +301,34 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
 
   revalidateAfterMutation((existing?.card_id as string | null) ?? null);
   redirect("/dashboard");
+}
+
+export async function toggleSplitSettlement(splitId: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+
+  const { data: current } = await supabase
+    .from("transaction_splits")
+    .select("settled_at, transaction_id, transactions(card_id)")
+    .eq("id", splitId)
+    .maybeSingle();
+
+  const settled_at = current?.settled_at ? null : new Date().toISOString();
+
+  const { error } = await supabase
+    .from("transaction_splits")
+    .update({ settled_at })
+    .eq("id", splitId);
+
+  if (error) {
+    return { ok: false, error: "Não foi possível atualizar o status do rateio." };
+  }
+
+  const joined = current?.transactions as unknown as
+    | { card_id: string | null }
+    | { card_id: string | null }[]
+    | null;
+  const cardId = Array.isArray(joined) ? (joined[0]?.card_id ?? null) : (joined?.card_id ?? null);
+  revalidateAfterMutation(cardId);
+  return { ok: true };
 }

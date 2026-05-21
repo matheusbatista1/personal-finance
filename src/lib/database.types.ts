@@ -233,6 +233,8 @@ export type Database = {
           contact_id: string;
           created_at: string;
           id: string;
+          is_custom: boolean;
+          settled_at: string | null;
           transaction_id: string;
           user_id: string;
         };
@@ -241,6 +243,8 @@ export type Database = {
           contact_id: string;
           created_at?: string;
           id?: string;
+          is_custom?: boolean;
+          settled_at?: string | null;
           transaction_id: string;
           user_id: string;
         };
@@ -249,6 +253,8 @@ export type Database = {
           contact_id?: string;
           created_at?: string;
           id?: string;
+          is_custom?: boolean;
+          settled_at?: string | null;
           transaction_id?: string;
           user_id?: string;
         };

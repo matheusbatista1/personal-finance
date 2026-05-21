@@ -23,6 +23,7 @@ interface WalletRow {
 interface SplitRow {
   contact_id: string;
   amount_cents: number | string;
+  settled_at?: string | null;
 }
 
 interface CategoryRow {
@@ -82,7 +83,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       this.supabase
         .from("transactions")
         .select(
-          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, categories(name, icon_name), transaction_splits(contact_id, amount_cents)",
+          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at)",
         )
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
@@ -117,6 +118,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const breakdownMap = new Map<string, { split: number; individual: number }>();
     for (const tx of expenseTransactions) {
       for (const split of tx.transaction_splits ?? []) {
+        if (split.settled_at) continue; // já pago, não entra em receivable
         const entry = breakdownMap.get(split.contact_id) ?? { split: 0, individual: 0 };
         const amount = toNumber(split.amount_cents);
         if (tx.split_mode === "equal") {
