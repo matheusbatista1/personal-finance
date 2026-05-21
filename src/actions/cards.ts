@@ -90,6 +90,19 @@ export async function updateCard(id: string, input: UpdateCardOutput): Promise<A
   return { ok: true };
 }
 
+export async function setCardActive(id: string, isActive: boolean): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("cards").update({ is_active: isActive }).eq("id", id);
+
+  if (error) {
+    return { ok: false, error: "Não foi possível atualizar." };
+  }
+  revalidateAfter();
+  return { ok: true };
+}
+
 export async function deleteCard(id: string): Promise<ActionResult> {
   await requireUser();
   const supabase = await createClient();

@@ -84,6 +84,19 @@ export async function updateWallet(id: string, input: UpdateWalletOutput): Promi
   return { ok: true };
 }
 
+export async function setWalletActive(id: string, isActive: boolean): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("wallets").update({ is_active: isActive }).eq("id", id);
+
+  if (error) {
+    return { ok: false, error: "Não foi possível atualizar." };
+  }
+  revalidateAfter();
+  return { ok: true };
+}
+
 export async function deleteWallet(id: string): Promise<ActionResult> {
   await requireUser();
   const supabase = await createClient();

@@ -84,6 +84,43 @@ export async function updateCategory(
   return { ok: true };
 }
 
+export async function setCategoryActive(id: string, isActive: boolean): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  // Check if the category is system-owned (user_id IS NULL) or owned by the user
+  const { data: row, error: fetchErr } = await supabase
+    .from("categories")
+    .select("user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchErr || !row) {
+    return { ok: false, error: "Categoria não encontrada." };
+  }
+
+  if (row.user_id === user.id) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ is_active: isActive })
+      .eq("id", id);
+    if (error) return { ok: false, error: "Não foi possível atualizar." };
+  } else if (row.user_id === null) {
+    const { error } = await supabase
+      .from("user_category_overrides")
+      .upsert(
+        { user_id: user.id, category_id: id, is_active: isActive },
+        { onConflict: "user_id,category_id" },
+      );
+    if (error) return { ok: false, error: "Não foi possível atualizar." };
+  } else {
+    return { ok: false, error: "Sem permissão." };
+  }
+
+  revalidateAfter();
+  return { ok: true };
+}
+
 export async function deleteCategory(id: string): Promise<ActionResult> {
   const user = await requireUser();
   const supabase = await createClient();

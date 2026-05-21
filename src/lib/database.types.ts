@@ -63,6 +63,7 @@ export type Database = {
           credit_limit_cents: number;
           due_day: number;
           id: string;
+          is_active: boolean;
           name: string;
           updated_at: string;
           user_id: string;
@@ -75,6 +76,7 @@ export type Database = {
           credit_limit_cents?: number;
           due_day: number;
           id?: string;
+          is_active?: boolean;
           name: string;
           updated_at?: string;
           user_id: string;
@@ -87,6 +89,7 @@ export type Database = {
           credit_limit_cents?: number;
           due_day?: number;
           id?: string;
+          is_active?: boolean;
           name?: string;
           updated_at?: string;
           user_id?: string;
@@ -108,6 +111,7 @@ export type Database = {
           created_at: string;
           icon_name: string | null;
           id: string;
+          is_active: boolean;
           name: string;
           user_id: string | null;
         };
@@ -116,6 +120,7 @@ export type Database = {
           created_at?: string;
           icon_name?: string | null;
           id?: string;
+          is_active?: boolean;
           name: string;
           user_id?: string | null;
         };
@@ -124,6 +129,7 @@ export type Database = {
           created_at?: string;
           icon_name?: string | null;
           id?: string;
+          is_active?: boolean;
           name?: string;
           user_id?: string | null;
         };
@@ -367,6 +373,35 @@ export type Database = {
           },
         ];
       };
+      user_category_overrides: {
+        Row: {
+          category_id: string;
+          created_at: string;
+          is_active: boolean;
+          user_id: string;
+        };
+        Insert: {
+          category_id: string;
+          created_at?: string;
+          is_active?: boolean;
+          user_id: string;
+        };
+        Update: {
+          category_id?: string;
+          created_at?: string;
+          is_active?: boolean;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_category_overrides_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       wallets: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"];
@@ -375,6 +410,7 @@ export type Database = {
           created_at: string;
           id: string;
           invested_cents: number;
+          is_active: boolean;
           is_default: boolean;
           name: string;
           updated_at: string;
@@ -387,6 +423,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           invested_cents?: number;
+          is_active?: boolean;
           is_default?: boolean;
           name: string;
           updated_at?: string;
@@ -399,6 +436,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           invested_cents?: number;
+          is_active?: boolean;
           is_default?: boolean;
           name?: string;
           updated_at?: string;

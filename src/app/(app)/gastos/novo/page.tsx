@@ -6,28 +6,32 @@ import {
   type CategoryOption,
   type ContactOption,
 } from "@/components/transactions/NewTransactionForm";
+import { fetchCategoriesForUser } from "@/infrastructure/services/activeItems";
 
 export const metadata = {
   title: "Novo lançamento — FinLux",
 };
 
 export default async function NewTransactionPage() {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createClient();
 
-  const [walletsRes, cardsRes, contactsRes, categoriesRes] = await Promise.all([
+  const [walletsRes, cardsRes, contactsRes, allCategories] = await Promise.all([
     supabase
       .from("wallets")
       .select("id, name, account_type, is_default, banks(name)")
+      .eq("is_active", true)
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase
       .from("cards")
       .select("id, name, wallets(name)")
+      .eq("is_active", true)
       .order("created_at", { ascending: true }),
     supabase.from("contacts").select("id, name").order("name", { ascending: true }),
-    supabase.from("categories").select("id, name").order("name", { ascending: true }),
+    fetchCategoriesForUser(supabase, user.id),
   ]);
+  const categoriesRes = { data: allCategories.filter((c) => c.effectiveActive) };
 
   const walletRows =
     (walletsRes.data as unknown as Array<{

@@ -55,11 +55,13 @@ export default async function CarteiraPage() {
       .select(
         "id, name, balance_cents, account_type, is_default, bank_id, banks(name, brand_color, short_name)",
       )
+      .eq("is_active", true)
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase
       .from("cards")
       .select("id, name, color, credit_limit_cents, due_day, closing_day, wallet_id")
+      .eq("is_active", true)
       .order("created_at", { ascending: true }),
     supabase.from("banks").select("id, name, short_name").order("name"),
     fetchWalletNetFlows(supabase),
