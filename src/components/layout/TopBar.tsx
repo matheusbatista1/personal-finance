@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
 
 export function TopBar() {
@@ -14,13 +15,13 @@ export function TopBar() {
         >
           <CalendarDays size={20} aria-hidden />
         </button>
-        <button
-          type="button"
+        <Link
+          href="/gastos/novo"
           aria-label="Novo lançamento"
           className="text-on-surface-variant hover:bg-primary-container/20 hover:text-primary focus-visible:ring-primary/50 flex h-10 w-10 items-center justify-center rounded-full transition-all focus-visible:ring-2 focus-visible:ring-offset-0"
         >
           <Plus size={22} aria-hidden />
-        </button>
+        </Link>
         <div
           aria-hidden
           className="border-outline-variant/20 bg-surface-container-high text-label-sm text-primary flex h-10 w-10 items-center justify-center rounded-full border font-mono font-semibold"
