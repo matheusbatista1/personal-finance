@@ -68,7 +68,7 @@ function EmptyState() {
       <h3 className="text-headline-md text-on-surface mb-xs font-sans font-semibold">
         Você ainda não tem contatos
       </h3>
-      <p className="text-body-md text-on-surface-variant mb-lg max-w-md font-sans">
+      <p className="text-body-md text-on-surface-variant mb-lg max-w-[28rem] font-sans">
         Adicione as pessoas com quem você divide gastos — Arthur, Mãe, sócios, amigos — para começar
         a usar o motor de rateio.
       </p>

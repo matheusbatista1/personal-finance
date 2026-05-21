@@ -57,7 +57,7 @@ export function AddPersonDialog() {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="modal-glass p-md md:p-lg w-full max-w-md rounded-2xl">
+          <div className="modal-glass p-md md:p-lg w-full max-w-[28rem] rounded-2xl">
             <div className="mb-lg flex items-start justify-between">
               <div>
                 <h2
