@@ -18,7 +18,16 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ m?: string; type?: string; op?: string }>;
+  searchParams: Promise<{
+    m?: string;
+    type?: string;
+    op?: string;
+    wallet?: string;
+    card?: string;
+    cat?: string;
+    from?: string;
+    to?: string;
+  }>;
 }
 
 interface TransactionRow {
@@ -32,6 +41,7 @@ interface TransactionRow {
   operation: "card" | "pix" | "loan" | null;
   wallet_id: string | null;
   card_id: string | null;
+  category_id: string | null;
   categories: { name: string; icon_name: string | null } | null;
   wallets: { name: string } | null;
   cards: { name: string } | null;
@@ -60,28 +70,58 @@ function normalizeOperation(value?: string): OperationFilter {
   return "all";
 }
 
+function normalizeId(value?: string): string {
+  return value && value !== "all" ? value : "";
+}
+
+function normalizeDate(value?: string): string {
+  if (!value) return "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+}
+
 export default async function TransacoesPage({ searchParams }: PageProps) {
   await requireUser();
   const params = await searchParams;
   const { year, month } = resolveCompetence(params.m);
   const typeFilter = normalizeType(params.type);
   const operationFilter = normalizeOperation(params.op);
+  const walletFilter = normalizeId(params.wallet);
+  const cardFilter = normalizeId(params.card);
+  const categoryFilter = normalizeId(params.cat);
+  const dateFrom = normalizeDate(params.from);
+  const dateTo = normalizeDate(params.to);
   const competence = `${year}-${String(month).padStart(2, "0")}`;
   const window = computeBillingWindow(year, month);
 
   const supabase = await createClient();
 
+  const [walletsRes, cardsRes, categoriesRes] = await Promise.all([
+    supabase.from("wallets").select("id, name").order("name"),
+    supabase.from("cards").select("id, name").order("name"),
+    supabase.from("categories").select("id, name").order("name"),
+  ]);
+
+  const walletOptions = (walletsRes.data ?? []).map((w) => ({ id: w.id, name: w.name }));
+  const cardOptions = (cardsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
+  const categoryOptions = (categoriesRes.data ?? []).map((c) => ({ id: c.id, name: c.name }));
+
+  const lowerBoundIso = dateFrom ? new Date(`${dateFrom}T00:00:00`).toISOString() : window.startIso;
+  const upperBoundIso = dateTo ? new Date(`${dateTo}T23:59:59.999`).toISOString() : window.endIso;
+
   let query = supabase
     .from("transactions")
     .select(
-      "id, type, description, amount_cents, user_share_cents, occurred_at, split_mode, operation, wallet_id, card_id, categories(name, icon_name), wallets(name), cards(name)",
+      "id, type, description, amount_cents, user_share_cents, occurred_at, split_mode, operation, wallet_id, card_id, category_id, categories(name, icon_name), wallets(name), cards(name)",
     )
-    .gte("occurred_at", window.startIso)
-    .lt("occurred_at", window.endIso)
+    .gte("occurred_at", lowerBoundIso)
+    .lt("occurred_at", upperBoundIso)
     .order("occurred_at", { ascending: false });
 
   if (typeFilter !== "all") query = query.eq("type", typeFilter);
   if (operationFilter !== "all") query = query.eq("operation", operationFilter);
+  if (walletFilter) query = query.eq("wallet_id", walletFilter);
+  if (cardFilter) query = query.eq("card_id", cardFilter);
+  if (categoryFilter) query = query.eq("category_id", categoryFilter);
 
   const { data } = await query;
   const transactions = ((data ?? []) as unknown as TransactionRow[]) ?? [];
@@ -158,6 +198,14 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
           competence={competence}
           activeType={typeFilter}
           activeOperation={operationFilter}
+          activeWalletId={walletFilter}
+          activeCardId={cardFilter}
+          activeCategoryId={categoryFilter}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          wallets={walletOptions}
+          cards={cardOptions}
+          categories={categoryOptions}
         />
 
         <TransactionsList rows={rows} />
