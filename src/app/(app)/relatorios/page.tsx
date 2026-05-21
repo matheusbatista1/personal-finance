@@ -10,6 +10,8 @@ import {
   type ContactBreakdownRow,
 } from "@/components/reports/PerContactBreakdown";
 import { ExportControls } from "@/components/reports/ExportControls";
+import { TransactionsTable } from "@/components/reports/TransactionsTable";
+import { PerPersonDetailed } from "@/components/reports/PerPersonDetailed";
 
 export const metadata = {
   title: "Relatórios — FinLux",
@@ -26,7 +28,14 @@ interface TxRow {
   user_share_cents: number | string;
   category_id: string | null;
   occurred_at: string;
+  description: string;
+  wallet_id: string | null;
+  card_id: string | null;
+  installment_number: number | null;
+  installment_total: number | null;
   categories: { name: string; icon_name: string | null } | null;
+  wallets: { name: string } | null;
+  cards: { name: string } | null;
 }
 
 interface SplitJoinRow {
@@ -34,7 +43,13 @@ interface SplitJoinRow {
   is_custom: boolean;
   contact_id: string;
   contacts: { name: string } | null;
-  transactions: { occurred_at: string } | null;
+  transactions: {
+    id: string;
+    description: string;
+    occurred_at: string;
+    installment_number: number | null;
+    installment_total: number | null;
+  } | null;
 }
 
 function toNumber(value: number | string): number {
@@ -76,10 +91,11 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     supabase
       .from("transactions")
       .select(
-        "id, type, amount_cents, user_share_cents, category_id, occurred_at, categories(name, icon_name)",
+        "id, type, amount_cents, user_share_cents, category_id, occurred_at, description, wallet_id, card_id, installment_number, installment_total, categories(name, icon_name), wallets(name), cards(name)",
       )
       .gte("occurred_at", window.startIso)
-      .lt("occurred_at", window.endIso),
+      .lt("occurred_at", window.endIso)
+      .order("occurred_at", { ascending: true }),
     supabase
       .from("transactions")
       .select("type, amount_cents, occurred_at")
@@ -88,7 +104,7 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     supabase
       .from("transaction_splits")
       .select(
-        "amount_cents, is_custom, contact_id, contacts(name), transactions!inner(occurred_at)",
+        "amount_cents, is_custom, contact_id, contacts(name), transactions!inner(id, description, occurred_at, installment_number, installment_total)",
       )
       .gte("transactions.occurred_at", window.startIso)
       .lt("transactions.occurred_at", window.endIso),
@@ -176,6 +192,100 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + toNumber(t.amount_cents), 0);
 
+  function formatBR(date: string): string {
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    }).format(new Date(date));
+  }
+
+  const transactionRows = [...monthTransactions]
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map((tx) => ({
+      id: tx.id,
+      date: formatBR(tx.occurred_at),
+      description: tx.description || "Sem descrição",
+      category: tx.categories?.name ?? "Sem categoria",
+      sourceLabel: tx.card_id ? (tx.cards?.name ?? "Cartão") : (tx.wallets?.name ?? "Conta"),
+      type: tx.type,
+      amountCents: toNumber(tx.amount_cents),
+      userShareCents: toNumber(tx.user_share_cents),
+      installmentLabel:
+        (tx.installment_total ?? 1) > 1 ? `${tx.installment_number}/${tx.installment_total}` : null,
+    }));
+
+  // Per-person blocks: EU first, then each contact with the splits assigned to them.
+  const userBlockTransactions = expenses
+    .filter((tx) => toNumber(tx.user_share_cents) > 0)
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map((tx) => ({
+      id: tx.id,
+      date: formatBR(tx.occurred_at),
+      description: tx.description || "Sem descrição",
+      amountCents: toNumber(tx.user_share_cents),
+      installmentLabel:
+        (tx.installment_total ?? 1) > 1 ? `${tx.installment_number}/${tx.installment_total}` : null,
+    }));
+
+  const splitsByContact = new Map<
+    string,
+    {
+      name: string;
+      transactions: {
+        id: string;
+        date: string;
+        description: string;
+        amountCents: number;
+        installmentLabel: string | null;
+      }[];
+      total: number;
+    }
+  >();
+  for (const split of splits) {
+    const tx = split.transactions;
+    if (!tx) continue;
+    const amount = toNumber(split.amount_cents);
+    const entry = splitsByContact.get(split.contact_id) ?? {
+      name: split.contacts?.name ?? "Sem nome",
+      transactions: [],
+      total: 0,
+    };
+    entry.total += amount;
+    entry.transactions.push({
+      id: tx.id,
+      date: formatBR(tx.occurred_at),
+      description: tx.description || "Sem descrição",
+      amountCents: amount,
+      installmentLabel:
+        (tx.installment_total ?? 1) > 1 ? `${tx.installment_number}/${tx.installment_total}` : null,
+    });
+    splitsByContact.set(split.contact_id, entry);
+  }
+
+  const personBlocks = [
+    {
+      contactId: "__me",
+      name: "EU",
+      isUser: true,
+      totalCents: userShareTotal,
+      transactions: userBlockTransactions,
+    },
+    ...[...splitsByContact.entries()]
+      .map(([contactId, data]) => ({
+        contactId,
+        name: data.name,
+        isUser: false,
+        totalCents: data.total,
+        transactions: data.transactions.sort(
+          (a, b) =>
+            new Date(a.date.split("/").reverse().join("-")).getTime() -
+            new Date(b.date.split("/").reverse().join("-")).getTime(),
+        ),
+      }))
+      .sort((a, b) => b.totalCents - a.totalCents),
+  ];
+
   return (
     <>
       <header className="mb-lg gap-md flex flex-col justify-between md:flex-row md:items-end">
@@ -225,8 +335,12 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
         </section>
 
         <SpendingByCategory slices={categorySlices} totalCents={expenseTotal} />
-        <MonthlyTrend points={trendPoints} />
+        <div className="no-print">
+          <MonthlyTrend points={trendPoints} />
+        </div>
         <PerContactBreakdown rows={contactRows} />
+        <TransactionsTable rows={transactionRows} />
+        <PerPersonDetailed blocks={personBlocks} />
       </div>
     </>
   );

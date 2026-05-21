@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical } from "lucide-react";
+import Link from "next/link";
+import { FileText, MoreVertical } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
@@ -104,6 +105,14 @@ export function PersonCard({
             </span>
           </div>
         </div>
+        <Link
+          href={`/pessoas/${contactId}/relatorio`}
+          onClick={(e) => e.stopPropagation()}
+          className="border-outline-variant/30 hover:border-primary/50 hover:text-primary text-on-surface-variant gap-xs px-md py-sm relative z-20 flex cursor-pointer items-center justify-center rounded-full border font-mono text-sm transition-colors"
+        >
+          <FileText size={14} aria-hidden />
+          Ver relatório
+        </Link>
       </article>
       <EditContactDialog
         contactId={contactId}
