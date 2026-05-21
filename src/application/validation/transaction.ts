@@ -43,6 +43,7 @@ export const createTransactionSchema = z.object({
   occurredAt: z.string().min(1, "Data obrigatória."),
   categoryId: z.string().uuid("Categoria obrigatória.").optional().or(z.literal("")),
   source: transactionSourceSchema,
+  operation: z.enum(["card", "loan", "pix"]).optional().or(z.literal("")),
   userIncludedInSplit: z.boolean(),
   participants: z.array(splitParticipantSchema),
 });

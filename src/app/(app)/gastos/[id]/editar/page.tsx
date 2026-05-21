@@ -26,6 +26,7 @@ interface TransactionRow {
   category_id: string | null;
   wallet_id: string | null;
   card_id: string | null;
+  operation: "card" | "loan" | "pix" | null;
   split_mode: "none" | "equal" | "custom";
   user_included_in_split: boolean;
 }
@@ -54,7 +55,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
     supabase
       .from("transactions")
       .select(
-        "id, type, amount_cents, description, occurred_at, category_id, wallet_id, card_id, split_mode, user_included_in_split",
+        "id, type, amount_cents, description, occurred_at, category_id, wallet_id, card_id, operation, split_mode, user_included_in_split",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -139,6 +140,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
     occurredAt: tx.occurred_at.slice(0, 10),
     categoryId: tx.category_id ?? "",
     source,
+    operation: tx.operation ?? "",
     userIncludedInSplit: tx.user_included_in_split,
     participants,
   };

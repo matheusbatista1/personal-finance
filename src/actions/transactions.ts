@@ -18,6 +18,7 @@ const transactionPayloadSchema = z.object({
     z.object({ kind: z.literal("wallet"), id: z.string().uuid() }),
     z.object({ kind: z.literal("card"), id: z.string().uuid() }),
   ]),
+  operation: z.enum(["card", "loan", "pix"]).optional().or(z.literal("")),
   userIncludedInSplit: z.boolean(),
   participants: z.array(
     z.object({
@@ -41,6 +42,7 @@ interface PreparedTransaction {
     description: string;
     occurred_at: string;
     type: "expense" | "income";
+    operation: "card" | "loan" | "pix" | null;
     split_mode: "none" | "equal" | "custom";
     user_included_in_split: boolean;
     user_share_cents: number;
@@ -96,6 +98,7 @@ async function prepareTransaction(
         description: data.description || "",
         occurred_at: data.occurredAt,
         type: data.type,
+        operation: data.operation || null,
         split_mode: split.mode,
         user_included_in_split: data.userIncludedInSplit,
         user_share_cents: split.userShareCents,
