@@ -234,6 +234,46 @@ body {
   box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
+@utility glow-button {
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@utility floating-orb {
+  position: absolute;
+  filter: blur(100px);
+  z-index: 0;
+  opacity: 0.4;
+  animation: float 20s infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(50px, 50px) scale(1.2);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-anim {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: reveal 0.8s forwards ease-out;
+}
+
 /* Light theme glass swap */
 [data-theme="light"] .glass-panel {
   background: rgba(255, 255, 255, 0.7);

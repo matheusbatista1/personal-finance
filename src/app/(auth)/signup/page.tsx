@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { AuthCard } from "@/components/auth/AuthCard";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { SignupForm } from "@/components/auth/SignupForm";
 
 export const metadata = {
@@ -8,19 +7,8 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <AuthCard
-      title="Crie sua conta"
-      subtitle="Comece a organizar suas finanças com elegância."
-      footer={
-        <p className="text-label-sm text-on-surface-variant font-mono">
-          Já tem conta?{" "}
-          <Link href="/login" className="text-primary font-semibold hover:underline">
-            Entrar
-          </Link>
-        </p>
-      }
-    >
+    <AuthShell mode="signup">
       <SignupForm />
-    </AuthCard>
+    </AuthShell>
   );
 }

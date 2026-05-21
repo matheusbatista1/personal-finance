@@ -7,8 +7,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
       <input
         ref={ref}
         className={cn(
-          "text-body-md text-on-surface border-outline-variant/50 placeholder-on-surface-variant/40 focus-visible:border-primary pb-sm w-full border-b bg-transparent font-sans transition-colors outline-none",
-          "focus-visible:pb-[calc(theme(spacing.sm)-1px)] focus-visible:border-b-2",
+          "bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface placeholder-outline-variant/50 py-sm px-sm w-full rounded-md border-b font-sans transition-all outline-none focus:ring-0",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
