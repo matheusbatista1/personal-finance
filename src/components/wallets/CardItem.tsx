@@ -50,13 +50,13 @@ export function CardItem({
       </div>
 
       <div className="relative z-10">
-        <p className={`text-label-md mb-1 font-mono ${onMuted}`}>Limite disponível</p>
+        <p className={`text-label-md mb-1 font-mono ${onMuted}`}>Limite total</p>
         <p className={`text-headline-md font-sans font-semibold tracking-tight ${onSurface}`}>
-          {formatBRL(availableLimitCents)}
+          {formatBRL(creditLimitCents)}
         </p>
         <div className="mt-4 flex items-center justify-between">
           <p className={`text-label-sm font-mono ${onMuted}`}>
-            Limite total {formatBRL(creditLimitCents)}
+            Disponível {formatBRL(availableLimitCents)}
           </p>
           <p className={`text-label-sm font-mono ${onMuted}`}>Vence dia {dueDay}</p>
         </div>

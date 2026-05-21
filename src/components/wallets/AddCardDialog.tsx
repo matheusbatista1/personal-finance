@@ -26,6 +26,7 @@ interface AddCardDialogProps {
 
 const COLOR_PRESETS = [
   { value: "#2a2a2a", label: "Obsidian" },
+  { value: "#6b7280", label: "Cinza" },
   { value: "#4a148c", label: "Purple" },
   { value: "#8a2be2", label: "Violet" },
   { value: "#b76e79", label: "Rose Gold" },

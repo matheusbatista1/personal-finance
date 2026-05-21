@@ -5,7 +5,11 @@ import { BankList, type BankRow } from "@/components/wallets/BankList";
 import { WalletTotals } from "@/components/wallets/WalletTotals";
 import { AddWalletDialog, type BankOption } from "@/components/wallets/AddWalletDialog";
 import { AddCardDialog, type WalletOption } from "@/components/wallets/AddCardDialog";
-import { effectiveBalance, fetchWalletNetFlows } from "@/infrastructure/services/walletBalances";
+import {
+  effectiveBalance,
+  fetchCardUsedLimits,
+  fetchWalletNetFlows,
+} from "@/infrastructure/services/walletBalances";
 
 export const metadata = {
   title: "Carteira — FinLux",
@@ -45,7 +49,7 @@ export default async function CarteiraPage() {
   await requireUser();
   const supabase = await createClient();
 
-  const [walletsRes, cardsRes, banksRes, netFlows] = await Promise.all([
+  const [walletsRes, cardsRes, banksRes, netFlows, cardUsed] = await Promise.all([
     supabase
       .from("wallets")
       .select(
@@ -59,6 +63,7 @@ export default async function CarteiraPage() {
       .order("created_at", { ascending: true }),
     supabase.from("banks").select("id, name, short_name").order("name"),
     fetchWalletNetFlows(supabase),
+    fetchCardUsedLimits(supabase),
   ]);
 
   const wallets = ((walletsRes.data ?? []) as unknown as WalletQueryRow[]) ?? [];
@@ -67,13 +72,13 @@ export default async function CarteiraPage() {
 
   const cardRows: CardRow[] = cards.map((card) => {
     const limit = toNumber(card.credit_limit_cents);
+    const used = cardUsed.get(card.id) ?? 0;
     return {
       id: card.id,
       name: card.name,
       color: card.color,
       creditLimitCents: limit,
-      // Without transactions yet, available = limit.
-      availableLimitCents: limit,
+      availableLimitCents: Math.max(0, limit - used),
       dueDay: card.due_day,
     };
   });

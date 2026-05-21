@@ -39,3 +39,33 @@ export async function fetchWalletNetFlows(supabase: SupabaseClient): Promise<Map
 export function effectiveBalance(initialCents: number, netFlow: number | undefined): number {
   return initialCents + (netFlow ?? 0);
 }
+
+interface CardTxRow {
+  card_id: string | null;
+  type: "expense" | "income";
+  amount_cents: number | string;
+}
+
+/**
+ * Card used-limit per card: expense charges add to used, income (refund) subtracts.
+ * Available = creditLimit - usedLimit. Keys missing mean zero usage.
+ */
+export async function fetchCardUsedLimits(supabase: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("card_id, type, amount_cents")
+    .not("card_id", "is", null);
+
+  if (error || !data) return new Map();
+
+  const rows = data as unknown as CardTxRow[];
+  const used = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.card_id) continue;
+    const amount =
+      typeof row.amount_cents === "number" ? row.amount_cents : Number(row.amount_cents);
+    const delta = row.type === "expense" ? amount : -amount;
+    used.set(row.card_id, (used.get(row.card_id) ?? 0) + delta);
+  }
+  return used;
+}

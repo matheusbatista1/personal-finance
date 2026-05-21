@@ -295,6 +295,17 @@ body {
   animation: reveal 0.8s forwards ease-out;
 }
 
+/* Restore pointer cursor on enabled buttons & summary (Tailwind v4 dropped the default). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary {
+  cursor: pointer;
+}
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Tab bars and other horizontal scrollers should not show their scrollbar. */
 .hide-scrollbar {
   -ms-overflow-style: none;
@@ -304,15 +315,20 @@ body {
   display: none;
 }
 
-/* Apple Wallet–style stack: cards overlap by 160px; the active card lifts on hover. */
+/* Apple Wallet–style stack: cards overlap by 160px; hovered card pops out of the stack. */
 .wallet-stack {
-  perspective: 1000px;
+  perspective: 1200px;
 }
 
 .wallet-stack .wallet-card {
-  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  transition:
+    transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.4s ease;
   transform-style: preserve-3d;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  z-index: 1;
 }
 
 .wallet-stack .wallet-card:not(:first-child) {
@@ -321,8 +337,9 @@ body {
 
 .wallet-stack .wallet-card:hover,
 .wallet-stack .wallet-card:focus-visible {
-  transform: translateY(-20px) translateZ(30px);
-  cursor: pointer;
+  transform: translateY(-170px) translateZ(80px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+  z-index: 50;
   outline: none;
 }
 

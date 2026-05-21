@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { X, Wallet, CreditCard, Users, Plus, Trash2, Check, RotateCcw } from "lucide-react";
@@ -150,7 +150,7 @@ export function NewTransactionForm({
   });
 
   const watchedAmount = watch("amountCents");
-  const watchedParticipants = watch("participants");
+  const watchedParticipants = useWatch({ control, name: "participants" });
   const watchedDividido = watch("userIncludedInSplit");
   const watchedSource = watch("source");
   const watchedType = watch("type");

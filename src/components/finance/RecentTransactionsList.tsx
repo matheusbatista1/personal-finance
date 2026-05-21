@@ -83,12 +83,12 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
           </Link>
         ))}
       </div>
-      <button
-        type="button"
-        className="px-sm py-xs text-label-md text-primary hover:bg-primary/10 hover:text-on-primary-container self-center rounded-full font-mono transition-colors"
+      <Link
+        href="/transacoes"
+        className="px-sm py-xs text-label-md text-primary hover:bg-primary/10 hover:text-on-primary-container cursor-pointer self-center rounded-full font-mono transition-colors"
       >
         Ver todas as transações
-      </button>
+      </Link>
     </section>
   );
 }
