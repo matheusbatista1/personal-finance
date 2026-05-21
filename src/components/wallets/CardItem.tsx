@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { Nfc } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 
 interface CardItemProps {
+  id: string;
   name: string;
   color: string;
   creditLimitCents: number;
@@ -10,6 +12,7 @@ interface CardItemProps {
 }
 
 export function CardItem({
+  id,
   name,
   color,
   creditLimitCents,
@@ -23,8 +26,10 @@ export function CardItem({
   const background = `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 45%, #000))`;
 
   return (
-    <article
-      className="wallet-card p-md relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10"
+    <Link
+      href={`/fatura/${id}`}
+      aria-label={`Abrir fatura de ${name}`}
+      className="wallet-card p-md focus-visible:ring-primary/50 relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10 focus-visible:ring-2 focus-visible:outline-none"
       style={{ background }}
     >
       <div
@@ -56,7 +61,7 @@ export function CardItem({
           <p className={`text-label-sm font-mono ${onMuted}`}>Vence dia {dueDay}</p>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 

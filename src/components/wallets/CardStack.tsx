@@ -36,6 +36,7 @@ export function CardStack({ cards }: CardStackProps) {
       {cards.map((card) => (
         <CardItem
           key={card.id}
+          id={card.id}
           name={card.name}
           color={card.color}
           creditLimitCents={card.creditLimitCents}

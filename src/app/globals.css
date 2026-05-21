@@ -295,6 +295,15 @@ body {
   animation: reveal 0.8s forwards ease-out;
 }
 
+/* Tab bars and other horizontal scrollers should not show their scrollbar. */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Apple Wallet–style stack: cards overlap by 160px; the active card lifts on hover. */
 .wallet-stack {
   perspective: 1000px;
