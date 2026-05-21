@@ -17,6 +17,7 @@ interface WalletQueryRow {
   balance_cents: number | string;
   account_type: "PF" | "PJ";
   is_default: boolean;
+  bank_id: string | null;
   banks: { name: string; brand_color: string | null; short_name: string } | null;
 }
 
@@ -26,6 +27,8 @@ interface CardQueryRow {
   color: string;
   credit_limit_cents: number | string;
   due_day: number;
+  closing_day: number;
+  wallet_id: string;
 }
 
 interface BankQueryRow {
@@ -46,13 +49,13 @@ export default async function CarteiraPage() {
     supabase
       .from("wallets")
       .select(
-        "id, name, balance_cents, account_type, is_default, banks(name, brand_color, short_name)",
+        "id, name, balance_cents, account_type, is_default, bank_id, banks(name, brand_color, short_name)",
       )
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase
       .from("cards")
-      .select("id, name, color, credit_limit_cents, due_day")
+      .select("id, name, color, credit_limit_cents, due_day, closing_day, wallet_id")
       .order("created_at", { ascending: true }),
     supabase.from("banks").select("id, name, short_name").order("name"),
     fetchWalletNetFlows(supabase),
@@ -78,9 +81,11 @@ export default async function CarteiraPage() {
   const bankRows: BankRow[] = wallets.map((wallet) => ({
     walletId: wallet.id,
     walletName: wallet.name,
+    bankId: wallet.bank_id,
     bankName: wallet.banks?.name ?? null,
     brandColor: wallet.banks?.brand_color ?? null,
     shortName: wallet.banks?.short_name ?? null,
+    initialBalanceCents: toNumber(wallet.balance_cents),
     balanceCents: effectiveBalance(toNumber(wallet.balance_cents), netFlows.get(wallet.id)),
     accountType: wallet.account_type,
     isDefault: wallet.is_default,
@@ -134,7 +139,7 @@ export default async function CarteiraPage() {
         </section>
 
         <section className="gap-lg flex flex-col lg:col-span-7">
-          <BankList rows={bankRows} />
+          <BankList rows={bankRows} banks={bankOptions} />
           <WalletTotals
             consolidatedCents={consolidatedCents}
             totalCreditLimitCents={totalCreditLimitCents}

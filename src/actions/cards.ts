@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { requireUser } from "@/lib/auth";
-import type { CreateCardOutput } from "@/application/validation/card";
+import type { CreateCardOutput, UpdateCardOutput } from "@/application/validation/card";
 
 const cardPayloadSchema = z.object({
   name: z.string().trim().min(2).max(60),
@@ -18,6 +18,13 @@ const cardPayloadSchema = z.object({
 export type ActionResult =
   | { ok: true }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+
+function revalidateAfter(cardId?: string) {
+  revalidatePath("/carteira");
+  revalidatePath("/dashboard");
+  revalidatePath("/transacoes");
+  if (cardId) revalidatePath(`/fatura/${cardId}`);
+}
 
 export async function createCard(input: CreateCardOutput): Promise<ActionResult> {
   const parsed = cardPayloadSchema.safeParse(input);
@@ -46,7 +53,55 @@ export async function createCard(input: CreateCardOutput): Promise<ActionResult>
     return { ok: false, error: "Não foi possível criar o cartão." };
   }
 
-  revalidatePath("/carteira");
-  revalidatePath("/dashboard");
+  revalidateAfter();
+  return { ok: true };
+}
+
+export async function updateCard(id: string, input: UpdateCardOutput): Promise<ActionResult> {
+  const parsed = cardPayloadSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Dados inválidos.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("cards")
+    .update({
+      wallet_id: parsed.data.walletId,
+      name: parsed.data.name,
+      credit_limit_cents: parsed.data.creditLimitCents,
+      color: parsed.data.color,
+      closing_day: parsed.data.closingDay,
+      due_day: parsed.data.dueDay,
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { ok: false, error: "Não foi possível atualizar o cartão." };
+  }
+
+  revalidateAfter(id);
+  return { ok: true };
+}
+
+export async function deleteCard(id: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("cards").delete().eq("id", id);
+  if (error) {
+    return {
+      ok: false,
+      error: "Não foi possível excluir o cartão. Verifique se há transações vinculadas.",
+    };
+  }
+
+  revalidateAfter();
   return { ok: true };
 }

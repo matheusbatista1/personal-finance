@@ -7,3 +7,6 @@ export const createContactSchema = z.object({
 });
 
 export type CreateContactInput = z.infer<typeof createContactSchema>;
+
+export const updateContactSchema = createContactSchema;
+export type UpdateContactInput = CreateContactInput;

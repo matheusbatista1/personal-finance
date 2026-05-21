@@ -33,3 +33,7 @@ export const createCardSchema = z.object({
 
 export type CreateCardInput = z.input<typeof createCardSchema>;
 export type CreateCardOutput = z.output<typeof createCardSchema>;
+
+export const updateCardSchema = createCardSchema;
+export type UpdateCardInput = CreateCardInput;
+export type UpdateCardOutput = CreateCardOutput;

@@ -1,11 +1,14 @@
 import { BankItem } from "@/components/wallets/BankItem";
+import type { BankOption } from "@/components/wallets/AddWalletDialog";
 
 export interface BankRow {
   walletId: string;
   walletName: string;
+  bankId: string | null;
   bankName: string | null;
   brandColor: string | null;
   shortName: string | null;
+  initialBalanceCents: number;
   balanceCents: number;
   accountType: "PF" | "PJ";
   isDefault: boolean;
@@ -13,9 +16,10 @@ export interface BankRow {
 
 interface BankListProps {
   rows: BankRow[];
+  banks: BankOption[];
 }
 
-export function BankList({ rows }: BankListProps) {
+export function BankList({ rows, banks }: BankListProps) {
   return (
     <div className="glass-panel p-md md:p-lg gap-md flex flex-col rounded-xl">
       <div className="border-outline-variant/20 pb-sm flex items-center justify-between border-b">
@@ -30,13 +34,17 @@ export function BankList({ rows }: BankListProps) {
         {rows.map((row) => (
           <li key={row.walletId}>
             <BankItem
+              walletId={row.walletId}
               walletName={row.walletName}
+              bankId={row.bankId}
               bankName={row.bankName}
               brandColor={row.brandColor}
               shortName={row.shortName}
+              initialBalanceCents={row.initialBalanceCents}
               balanceCents={row.balanceCents}
               accountType={row.accountType}
               isDefault={row.isDefault}
+              banks={banks}
             />
           </li>
         ))}

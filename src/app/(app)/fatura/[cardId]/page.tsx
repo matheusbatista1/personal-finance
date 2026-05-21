@@ -7,6 +7,9 @@ import {
   InvoiceTransactionsList,
   type InvoiceTransactionRow,
 } from "@/components/invoices/InvoiceTransactionsList";
+import { EditCardDialog } from "@/components/wallets/EditCardDialog";
+import type { WalletOption } from "@/components/wallets/AddCardDialog";
+import type { CreateCardInput } from "@/application/validation/card";
 import {
   computeBillingWindow,
   computeClosingDate,
@@ -32,6 +35,7 @@ interface CardRow {
   credit_limit_cents: number | string;
   closing_day: number;
   due_day: number;
+  wallet_id: string;
 }
 
 interface TransactionRow {
@@ -73,14 +77,34 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
 
   const supabase = await createClient();
 
-  const { data: cardData } = await supabase
-    .from("cards")
-    .select("id, name, color, credit_limit_cents, closing_day, due_day")
-    .eq("id", cardId)
-    .maybeSingle();
+  const [{ data: cardData }, { data: walletsData }] = await Promise.all([
+    supabase
+      .from("cards")
+      .select("id, name, color, credit_limit_cents, closing_day, due_day, wallet_id")
+      .eq("id", cardId)
+      .maybeSingle(),
+    supabase
+      .from("wallets")
+      .select("id, name, is_default")
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: true }),
+  ]);
 
   const card = cardData as CardRow | null;
   if (!card) notFound();
+
+  const walletOptions: WalletOption[] = (
+    (walletsData ?? []) as Array<{ id: string; name: string; is_default: boolean }>
+  ).map((w) => ({ id: w.id, name: w.name, isDefault: w.is_default }));
+
+  const cardInitialValues: CreateCardInput = {
+    name: card.name,
+    walletId: card.wallet_id,
+    creditLimitCents: (toNumber(card.credit_limit_cents) / 100).toFixed(2).replace(".", ","),
+    color: card.color,
+    closingDay: String(card.closing_day),
+    dueDay: String(card.due_day),
+  };
 
   const window = computeBillingWindow(year, month);
   const dueDate = computeDueDate(year, month, card.due_day);
@@ -120,16 +144,23 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
 
   return (
     <>
-      <header className="mb-lg">
-        <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-          Fatura · {formatReferenceLong(year, month)}
-        </span>
-        <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
-          {card.name}
-        </h1>
-        <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-          Transações lançadas neste cartão dentro do mês de referência.
-        </p>
+      <header className="mb-lg gap-md flex flex-col justify-between md:flex-row md:items-end">
+        <div>
+          <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
+            Fatura · {formatReferenceLong(year, month)}
+          </span>
+          <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
+            {card.name}
+          </h1>
+          <p className="text-body-md text-on-surface-variant mt-sm font-sans">
+            Transações lançadas neste cartão dentro do mês de referência.
+          </p>
+        </div>
+        <EditCardDialog
+          cardId={card.id}
+          wallets={walletOptions}
+          initialValues={cardInitialValues}
+        />
       </header>
 
       <div className="space-y-lg">

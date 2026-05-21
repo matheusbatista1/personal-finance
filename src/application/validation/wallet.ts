@@ -22,3 +22,8 @@ export const createWalletSchema = z.object({
 
 export type CreateWalletInput = z.input<typeof createWalletSchema>;
 export type CreateWalletOutput = z.output<typeof createWalletSchema>;
+
+// Update reuses the same shape (no schema change needed).
+export const updateWalletSchema = createWalletSchema;
+export type UpdateWalletInput = CreateWalletInput;
+export type UpdateWalletOutput = CreateWalletOutput;

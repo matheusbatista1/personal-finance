@@ -45,9 +45,11 @@ export default async function PessoasPage() {
           {rows.map((row, idx) => (
             <PersonCard
               key={row.id}
+              contactId={row.id}
               name={row.name}
               initial={row.name.charAt(0).toUpperCase()}
               role={row.color || "Contato"}
+              email={row.email}
               owedToMeCents={0}
               iOweCents={0}
               initialColor={PALETTE[idx % PALETTE.length] ?? "primary"}
