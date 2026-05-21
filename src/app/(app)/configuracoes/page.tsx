@@ -1,12 +1,13 @@
 import { ChevronRight, Key, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
-import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { DangerZone } from "@/components/settings/DangerZone";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { ChangePasswordDialog } from "@/components/settings/ChangePasswordDialog";
 import { TwoFactorPanel } from "@/components/settings/TwoFactorPanel";
+import { CategoryChip } from "@/components/categories/CategoryChip";
+import { NewCategoryButton } from "@/components/categories/CategoryFormDialog";
 
 export const metadata = {
   title: "Configurações — FinLux",
@@ -20,7 +21,7 @@ export default async function ConfiguracoesPage() {
     supabase.from("profiles").select("display_name, created_at").eq("id", user.id).single(),
     supabase
       .from("categories")
-      .select("id, name, icon_name, user_id")
+      .select("id, name, icon_name, color, user_id")
       .order("name", { ascending: true }),
   ]);
 
@@ -107,10 +108,13 @@ export default async function ConfiguracoesPage() {
 
       <section className="glass-panel p-md md:p-lg mb-lg rounded-2xl">
         <div className="mb-md flex items-center justify-between">
-          <h3 className="text-headline-md text-on-surface font-sans font-semibold">Categorias</h3>
-          <span className="text-label-sm text-on-surface-variant font-mono">
-            {categories.length} ativas
-          </span>
+          <div>
+            <h3 className="text-headline-md text-on-surface font-sans font-semibold">Categorias</h3>
+            <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
+              {categories.length} ativas · clique nas suas para editar
+            </p>
+          </div>
+          <NewCategoryButton />
         </div>
         {categories.length === 0 ? (
           <p className="text-body-md text-on-surface-variant font-sans">
@@ -119,17 +123,14 @@ export default async function ConfiguracoesPage() {
         ) : (
           <div className="gap-base grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((cat) => (
-              <div
+              <CategoryChip
                 key={cat.id}
-                className="bg-surface-container-low gap-sm p-sm flex items-center rounded-xl"
-              >
-                <div className="bg-primary-container/20 text-primary flex h-9 w-9 items-center justify-center rounded-lg">
-                  <TransactionIcon name={cat.icon_name ?? "Receipt"} size={18} />
-                </div>
-                <span className="text-label-md text-on-surface font-sans font-medium">
-                  {cat.name}
-                </span>
-              </div>
+                id={cat.id}
+                name={cat.name}
+                iconName={cat.icon_name}
+                color={cat.color}
+                editable={cat.user_id === user.id}
+              />
             ))}
           </div>
         )}
