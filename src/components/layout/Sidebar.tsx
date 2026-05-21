@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   LayoutDashboard,
   LogOut,
   Receipt,
@@ -24,6 +25,7 @@ const items: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/carteira", label: "Carteira", icon: Wallet },
   { href: "/transacoes", label: "Transações", icon: Receipt },
+  { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/pessoas", label: "Pessoas", icon: Users },
 ];
 
