@@ -289,6 +289,7 @@ export type Database = {
           created_at: string;
           description: string;
           id: string;
+          installment_group_id: string | null;
           installment_number: number;
           installment_total: number;
           invoice_id: string | null;
@@ -309,6 +310,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           id?: string;
+          installment_group_id?: string | null;
           installment_number?: number;
           installment_total?: number;
           invoice_id?: string | null;
@@ -329,6 +331,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           id?: string;
+          installment_group_id?: string | null;
           installment_number?: number;
           installment_total?: number;
           invoice_id?: string | null;

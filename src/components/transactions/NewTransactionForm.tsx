@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
 import {
   createTransaction,
+  deleteInstallmentGroup,
   deleteTransaction,
   toggleSplitSettlement,
   updateTransaction,
@@ -57,6 +58,9 @@ interface Props {
   transactionId?: string;
   initialValues?: CreateTransactionInput;
   existingSplits?: ExistingSplit[];
+  isInstallment?: boolean;
+  installmentNumber?: number;
+  installmentTotal?: number;
 }
 
 function todayIso(): string {
@@ -79,11 +83,15 @@ export function NewTransactionForm({
   transactionId,
   initialValues,
   existingSplits,
+  isInstallment = false,
+  installmentNumber = 1,
+  installmentTotal = 1,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [showInstallmentChoice, setShowInstallmentChoice] = useState(false);
   const [settlePendingId, setSettlePendingId] = useState<string | null>(null);
   const [localCategories, setLocalCategories] = useState<CategoryOption[]>(categories);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
@@ -193,6 +201,10 @@ export function NewTransactionForm({
 
   function onDeleteClick() {
     if (!transactionId) return;
+    if (isInstallment) {
+      setShowInstallmentChoice(true);
+      return;
+    }
     if (!confirmingDelete) {
       setConfirmingDelete(true);
       return;
@@ -204,6 +216,30 @@ export function NewTransactionForm({
         setServerError(result.error);
         setConfirmingDelete(false);
       }
+    });
+  }
+
+  function onDeleteOnlyThis() {
+    if (!transactionId) return;
+    setServerError(null);
+    startDeleteTransition(async () => {
+      const result = await deleteTransaction(transactionId);
+      if (result && !result.ok) {
+        setServerError(result.error);
+      }
+      setShowInstallmentChoice(false);
+    });
+  }
+
+  function onDeleteAllInstallments() {
+    if (!transactionId) return;
+    setServerError(null);
+    startDeleteTransition(async () => {
+      const result = await deleteInstallmentGroup(transactionId);
+      if (result && !result.ok) {
+        setServerError(result.error);
+      }
+      setShowInstallmentChoice(false);
     });
   }
 
@@ -638,6 +674,52 @@ export function NewTransactionForm({
           setValue("categoryId", cat.id, { shouldDirty: true });
         }}
       />
+      {showInstallmentChoice ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-background/80 p-margin-mobile fixed inset-0 z-[120] flex items-center justify-center backdrop-blur-md"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowInstallmentChoice(false);
+          }}
+        >
+          <div className="modal-glass p-md md:p-lg w-full max-w-[28rem] rounded-2xl">
+            <h3 className="text-headline-md text-on-surface mb-xs font-sans font-semibold">
+              Excluir parcelamento
+            </h3>
+            <p className="text-body-md text-on-surface-variant mb-md font-sans">
+              Essa transação é a parcela {installmentNumber} de {installmentTotal}. Você quer
+              excluir apenas esta parcela ou todas?
+            </p>
+            <div className="gap-sm flex flex-col">
+              <button
+                type="button"
+                onClick={onDeleteOnlyThis}
+                disabled={deletePending}
+                className="border-outline-variant/40 hover:border-on-surface text-on-surface px-md py-sm rounded-full border font-mono text-sm transition-colors disabled:opacity-60"
+              >
+                Apenas esta parcela ({installmentNumber}/{installmentTotal})
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteAllInstallments}
+                disabled={deletePending}
+                className="bg-error text-on-error px-md py-sm rounded-full font-mono text-sm font-semibold transition-all hover:brightness-110 disabled:opacity-60"
+              >
+                Todas as {installmentTotal} parcelas
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowInstallmentChoice(false)}
+                disabled={deletePending}
+                className="text-on-surface-variant hover:text-on-surface px-md py-sm rounded-full font-mono text-sm transition-colors disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -48,6 +48,7 @@ type TransactionPayload = {
   user_share_cents: number;
   installment_number: number;
   installment_total: number;
+  installment_group_id: string | null;
 };
 
 interface PreparedInstallment {
@@ -137,6 +138,7 @@ async function prepareTransaction(
   }));
 
   const installments: PreparedInstallment[] = [];
+  const installmentGroupId = installmentTotal > 1 ? crypto.randomUUID() : null;
 
   for (let i = 0; i < installmentTotal; i++) {
     const payload: TransactionPayload = {
@@ -154,6 +156,7 @@ async function prepareTransaction(
       user_share_cents: userShareSlices[i] ?? 0,
       installment_number: i + 1,
       installment_total: installmentTotal,
+      installment_group_id: installmentGroupId,
     };
 
     const splits = splitSlices
@@ -234,10 +237,11 @@ export async function updateTransaction(
 
   const supabase = await createClient();
 
-  // Preserva installment_number/total originais — só atualiza demais campos.
+  // Preserva installment_number/total/group originais — só atualiza demais campos.
   const {
     installment_number: _ignored1,
     installment_total: _ignored2,
+    installment_group_id: _ignored3,
     ...mutablePayload
   } = installment.payload;
 
@@ -297,6 +301,33 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("transactions").delete().eq("id", id);
   if (error) {
     return { ok: false, error: "Não foi possível excluir a transação." };
+  }
+
+  revalidateAfterMutation((existing?.card_id as string | null) ?? null);
+  redirect("/dashboard");
+}
+
+export async function deleteInstallmentGroup(transactionId: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("transactions")
+    .select("card_id, installment_group_id")
+    .eq("id", transactionId)
+    .maybeSingle();
+
+  const groupId = (existing?.installment_group_id as string | null) ?? null;
+  if (!groupId) {
+    // Single transaction (no group) — just delete this one.
+    const { error } = await supabase.from("transactions").delete().eq("id", transactionId);
+    if (error) return { ok: false, error: "Não foi possível excluir." };
+  } else {
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("installment_group_id", groupId);
+    if (error) return { ok: false, error: "Não foi possível excluir o parcelamento." };
   }
 
   revalidateAfterMutation((existing?.card_id as string | null) ?? null);

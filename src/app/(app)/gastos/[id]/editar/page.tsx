@@ -30,6 +30,9 @@ interface TransactionRow {
   operation: "card" | "loan" | "pix" | null;
   split_mode: "none" | "equal" | "custom";
   user_included_in_split: boolean;
+  installment_number: number | null;
+  installment_total: number | null;
+  installment_group_id: string | null;
 }
 
 interface SplitRow {
@@ -59,7 +62,7 @@ export default async function EditTransactionPage({ params }: PageProps) {
     supabase
       .from("transactions")
       .select(
-        "id, type, amount_cents, description, occurred_at, category_id, wallet_id, card_id, operation, split_mode, user_included_in_split",
+        "id, type, amount_cents, description, occurred_at, category_id, wallet_id, card_id, operation, split_mode, user_included_in_split, installment_number, installment_total, installment_group_id",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -158,6 +161,8 @@ export default async function EditTransactionPage({ params }: PageProps) {
     settledAt: s.settled_at,
   }));
 
+  const isInstallment = (tx.installment_total ?? 1) > 1 && Boolean(tx.installment_group_id);
+
   return (
     <NewTransactionForm
       mode="edit"
@@ -167,6 +172,9 @@ export default async function EditTransactionPage({ params }: PageProps) {
       categories={categories}
       contacts={contacts}
       existingSplits={existingSplits}
+      isInstallment={isInstallment}
+      installmentNumber={tx.installment_number ?? 1}
+      installmentTotal={tx.installment_total ?? 1}
     />
   );
 }
