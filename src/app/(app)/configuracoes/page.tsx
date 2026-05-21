@@ -6,6 +6,7 @@ import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { DangerZone } from "@/components/settings/DangerZone";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { ChangePasswordDialog } from "@/components/settings/ChangePasswordDialog";
+import { TwoFactorPanel } from "@/components/settings/TwoFactorPanel";
 
 export const metadata = {
   title: "Configurações — FinLux",
@@ -81,12 +82,7 @@ export default async function ConfiguracoesPage() {
               icon={<Key size={18} aria-hidden />}
               actionSlot={<ChangePasswordDialog />}
             />
-            <SettingsRow
-              label="Autenticação em duas etapas"
-              value="Desativada"
-              icon={<ShieldCheck size={18} aria-hidden />}
-              actionDisabled
-            />
+            <TwoFactorPanel />
           </div>
         </section>
 
