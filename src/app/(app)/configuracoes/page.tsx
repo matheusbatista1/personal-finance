@@ -4,6 +4,8 @@ import { createClient } from "@/infrastructure/database/supabase/server";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { DangerZone } from "@/components/settings/DangerZone";
+import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
+import { ChangePasswordDialog } from "@/components/settings/ChangePasswordDialog";
 
 export const metadata = {
   title: "Configurações — FinLux",
@@ -58,14 +60,7 @@ export default async function ConfiguracoesPage() {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          disabled
-          title="Em breve"
-          className="border-outline-variant/30 text-on-surface hover:bg-surface-variant/40 px-md py-sm rounded-full border font-sans font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Editar perfil
-        </button>
+        <EditProfileDialog currentName={profile?.display_name ?? ""} />
       </section>
 
       <div className="gap-md mb-lg grid grid-cols-1 lg:grid-cols-2">
@@ -82,9 +77,9 @@ export default async function ConfiguracoesPage() {
             />
             <SettingsRow
               label="Senha"
-              value="Última alteração desconhecida"
+              value="Defina uma nova senha quando quiser"
               icon={<Key size={18} aria-hidden />}
-              actionDisabled
+              actionSlot={<ChangePasswordDialog />}
             />
             <SettingsRow
               label="Autenticação em duas etapas"
@@ -154,9 +149,10 @@ interface SettingsRowProps {
   value: string;
   icon?: React.ReactNode;
   actionDisabled?: boolean;
+  actionSlot?: React.ReactNode;
 }
 
-function SettingsRow({ label, value, icon, actionDisabled }: SettingsRowProps) {
+function SettingsRow({ label, value, icon, actionDisabled, actionSlot }: SettingsRowProps) {
   return (
     <div className="border-outline-variant/10 gap-md pb-sm flex items-center justify-between border-b last:border-0 last:pb-0">
       <div className="gap-sm flex items-center">
@@ -166,15 +162,19 @@ function SettingsRow({ label, value, icon, actionDisabled }: SettingsRowProps) {
           <p className="text-body-md text-on-surface font-sans">{value}</p>
         </div>
       </div>
-      <button
-        type="button"
-        disabled={actionDisabled}
-        title={actionDisabled ? "Em breve" : undefined}
-        aria-label={`Alterar ${label.toLowerCase()}`}
-        className="text-on-surface-variant hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <ChevronRight size={20} aria-hidden />
-      </button>
+      {actionSlot ? (
+        actionSlot
+      ) : (
+        <button
+          type="button"
+          disabled={actionDisabled}
+          title={actionDisabled ? "Em breve" : undefined}
+          aria-label={`Alterar ${label.toLowerCase()}`}
+          className="text-on-surface-variant hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ChevronRight size={20} aria-hidden />
+        </button>
+      )}
     </div>
   );
 }
