@@ -1,0 +1,80 @@
+# ---------- Node / package managers ----------
+node_modules/
+.pnp
+.pnp.*
+.yarn/install-state.gz
+
+# ---------- Next.js ----------
+.next/
+out/
+build/
+next-env.d.ts
+
+# ---------- Production / deploy ----------
+.vercel
+.netlify
+
+# ---------- TypeScript ----------
+*.tsbuildinfo
+
+# ---------- Environment ----------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# ---------- Logs ----------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---------- Testing ----------
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# ---------- Supabase (local stack) ----------
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.local
+**/supabase/.volumes/
+**/supabase/.import/
+
+# ---------- IDE / editors ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------- Claude Code ----------
+.claude/settings.local.json
+.claude/worktrees/
+.claude/plans/
+
+# ---------- MCP (contains the Stitch API key) ----------
+.mcp.json
+
+# ---------- Local design references (kept out of history) ----------
+stitch_purple_finance_premium/
+
+# ---------- Misc ----------
+*.pem
+.DS_Store?
