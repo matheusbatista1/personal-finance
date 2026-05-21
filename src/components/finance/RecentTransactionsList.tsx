@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { RecentTransactionRow } from "@/application/dto/MonthlyDashboardDTO";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { formatBRL } from "@/lib/format";
@@ -27,10 +28,11 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
       </h3>
       <div className="glass-panel flex flex-col overflow-hidden rounded-xl">
         {rows.map((row, idx) => (
-          <article
+          <Link
             key={row.id}
+            href={`/gastos/${row.id}/editar`}
             className={cn(
-              "group p-sm hover:bg-surface-variant/30 md:p-md flex cursor-pointer items-center justify-between transition-colors",
+              "group p-sm hover:bg-surface-variant/30 md:p-md focus-visible:ring-primary/50 flex cursor-pointer items-center justify-between transition-colors focus-visible:ring-2 focus-visible:outline-none",
               idx < rows.length - 1 && "border-outline-variant/10 border-b",
             )}
           >
@@ -72,7 +74,7 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
                 </div>
               </div>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
       <button

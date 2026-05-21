@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Receipt } from "lucide-react";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { formatBRL } from "@/lib/format";
@@ -41,7 +42,10 @@ export function InvoiceTransactionsList({ rows }: Props) {
     <ul className="space-y-xs">
       {rows.map((row) => (
         <li key={row.id}>
-          <article className="glass-panel group p-md gap-md hover:bg-surface-variant/20 flex cursor-pointer items-center justify-between rounded-lg transition-colors">
+          <Link
+            href={`/gastos/${row.id}/editar`}
+            className="glass-panel group p-md gap-md hover:bg-surface-variant/20 focus-visible:ring-primary/50 flex cursor-pointer items-center justify-between rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
             <div className="gap-md flex items-center">
               <div className="bg-surface-container text-on-surface-variant group-hover:text-primary group-hover:bg-primary-container/10 flex h-12 w-12 items-center justify-center rounded-full transition-colors">
                 <TransactionIcon name={row.iconName} />
@@ -72,7 +76,7 @@ export function InvoiceTransactionsList({ rows }: Props) {
                 </p>
               ) : null}
             </div>
-          </article>
+          </Link>
         </li>
       ))}
     </ul>
