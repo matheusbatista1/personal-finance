@@ -36,6 +36,7 @@ interface CardRow {
 
 interface TransactionRow {
   id: string;
+  type: "expense" | "income";
   description: string;
   amount_cents: number | string;
   user_share_cents: number | string;
@@ -89,20 +90,23 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
   const { data: txData } = await supabase
     .from("transactions")
     .select(
-      "id, description, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name)",
+      "id, type, description, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name)",
     )
     .eq("card_id", cardId)
-    .eq("type", "expense")
     .gte("occurred_at", window.startIso)
     .lt("occurred_at", window.endIso)
     .order("occurred_at", { ascending: false });
 
   const transactions = ((txData ?? []) as unknown as TransactionRow[]) ?? [];
 
-  const invoiceBalanceCents = transactions.reduce((sum, tx) => sum + toNumber(tx.amount_cents), 0);
+  const invoiceBalanceCents = transactions.reduce((sum, tx) => {
+    const amount = toNumber(tx.amount_cents);
+    return sum + (tx.type === "income" ? -amount : amount);
+  }, 0);
 
   const rows: InvoiceTransactionRow[] = transactions.map((tx) => ({
     id: tx.id,
+    type: tx.type,
     description: tx.description || "Sem descrição",
     occurredAt: new Date(tx.occurred_at),
     categoryLabel: tx.categories?.name ?? "Sem categoria",

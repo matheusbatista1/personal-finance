@@ -66,7 +66,13 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
                 </div>
               ) : null}
               <div className="text-right">
-                <div className="text-body-md text-on-surface font-sans font-semibold">
+                <div
+                  className={cn(
+                    "text-body-md font-sans font-semibold",
+                    row.type === "income" ? "text-tertiary" : "text-on-surface",
+                  )}
+                >
+                  {row.type === "income" ? "+" : ""}
                   {formatBRL(row.amountCents)}
                 </div>
                 <div className={cn("text-label-sm font-mono", badgeTone[row.badge.tone])}>

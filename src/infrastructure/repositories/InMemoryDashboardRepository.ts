@@ -21,6 +21,9 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
       totalsAll: {
         totalCents: 1_544_412,
       },
+      income: {
+        totalCents: 0,
+      },
       balance: {
         availableCents: 1_245_000,
         deltaPct: 5.2,
@@ -52,6 +55,7 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
       recentTransactions: [
         {
           id: "tx-fogo-de-chao",
+          type: "expense",
           description: "Fogo de Chão",
           categoryLabel: "Alimentação",
           iconName: "Utensils",
@@ -65,6 +69,7 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
         },
         {
           id: "tx-uber",
+          type: "expense",
           description: "Uber",
           categoryLabel: "Transporte",
           iconName: "Car",
@@ -75,6 +80,7 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
         },
         {
           id: "tx-condominio",
+          type: "expense",
           description: "Condomínio",
           categoryLabel: "Moradia",
           iconName: "Home",

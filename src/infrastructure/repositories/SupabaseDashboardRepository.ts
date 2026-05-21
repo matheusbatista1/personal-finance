@@ -31,6 +31,7 @@ interface CategoryRow {
 interface TransactionRow {
   id: string;
   description: string;
+  type: "expense" | "income";
   amount_cents: number | string;
   user_share_cents: number | string;
   occurred_at: string;
@@ -79,9 +80,8 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       this.supabase
         .from("transactions")
         .select(
-          "id, description, amount_cents, user_share_cents, occurred_at, split_mode, categories(name, icon_name), transaction_splits(contact_id, amount_cents)",
+          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, categories(name, icon_name), transaction_splits(contact_id, amount_cents)",
         )
-        .eq("type", "expense")
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
         .order("occurred_at", { ascending: false }),
@@ -91,12 +91,25 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const wallets = ((walletsRes.data ?? []) as unknown as WalletRow[]) ?? [];
     const transactions = ((txRes.data ?? []) as unknown as TransactionRow[]) ?? [];
 
+    const expenseTransactions = transactions.filter((tx) => tx.type === "expense");
+    const incomeTransactions = transactions.filter((tx) => tx.type === "income");
+
     const availableCents = wallets.reduce((sum, w) => sum + toNumber(w.balance_cents), 0);
-    const userTotalCents = transactions.reduce((sum, t) => sum + toNumber(t.user_share_cents), 0);
-    const globalTotalCents = transactions.reduce((sum, t) => sum + toNumber(t.amount_cents), 0);
+    const userTotalCents = expenseTransactions.reduce(
+      (sum, t) => sum + toNumber(t.user_share_cents),
+      0,
+    );
+    const globalTotalCents = expenseTransactions.reduce(
+      (sum, t) => sum + toNumber(t.amount_cents),
+      0,
+    );
+    const incomeTotalCents = incomeTransactions.reduce(
+      (sum, t) => sum + toNumber(t.amount_cents),
+      0,
+    );
 
     const breakdownMap = new Map<string, { split: number; individual: number }>();
-    for (const tx of transactions) {
+    for (const tx of expenseTransactions) {
       for (const split of tx.transaction_splits ?? []) {
         const entry = breakdownMap.get(split.contact_id) ?? { split: 0, individual: 0 };
         const amount = toNumber(split.amount_cents);
@@ -124,6 +137,8 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       })
       .filter((row) => row.totalCents > 0);
 
+    const receivableCents = contactsBreakdown.reduce((sum, row) => sum + row.totalCents, 0);
+
     const recentTransactions: RecentTransactionRow[] = transactions
       .slice(0, 5)
       .map<RecentTransactionRow>((tx) => {
@@ -137,16 +152,21 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           };
         });
 
-        const amountSigned = -toNumber(tx.amount_cents);
+        const absoluteAmount = toNumber(tx.amount_cents);
+        const amountSigned = tx.type === "income" ? absoluteAmount : -absoluteAmount;
+
         const badge =
-          tx.split_mode === "equal"
-            ? { text: "Dividido", tone: "primary" as const }
-            : tx.split_mode === "custom"
-              ? { text: "Personalizado", tone: "primary" as const }
-              : { text: "Individual", tone: "muted" as const };
+          tx.type === "income"
+            ? { text: "Receita", tone: "tertiary" as const }
+            : tx.split_mode === "equal"
+              ? { text: "Dividido", tone: "primary" as const }
+              : tx.split_mode === "custom"
+                ? { text: "Personalizado", tone: "primary" as const }
+                : { text: "Individual", tone: "muted" as const };
 
         return {
           id: tx.id,
+          type: tx.type,
           description: tx.description || "Sem descrição",
           categoryLabel: tx.categories?.name ?? "Sem categoria",
           iconName: tx.categories?.icon_name ?? "Receipt",
@@ -162,8 +182,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       competenceLabel: formatCompetence(year, month),
       user: { totalCents: userTotalCents },
       totalsAll: { totalCents: globalTotalCents },
+      income: { totalCents: incomeTotalCents },
       balance: { availableCents, deltaPct: 0 },
-      receivable: { amountCents: 0, progress: 0 },
+      receivable: { amountCents: receivableCents, progress: 0 },
       contactsBreakdown,
       recentTransactions,
     };

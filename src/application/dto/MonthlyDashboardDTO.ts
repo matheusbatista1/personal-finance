@@ -17,8 +17,11 @@ export interface ParticipantBadge {
   colorRole: ContactColorRole | "primary";
 }
 
+export type TransactionFlow = "expense" | "income";
+
 export interface RecentTransactionRow {
   id: string;
+  type: TransactionFlow;
   description: string;
   categoryLabel: string;
   iconName: string;
@@ -38,6 +41,9 @@ export interface MonthlyDashboardDTO {
     totalCents: number;
   };
   totalsAll: {
+    totalCents: number;
+  };
+  income: {
     totalCents: number;
   };
   balance: {

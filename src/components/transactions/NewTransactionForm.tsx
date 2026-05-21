@@ -485,7 +485,7 @@ export function NewTransactionForm({
             </button>
           ) : (
             <p className="text-label-sm text-on-surface-variant font-mono">
-              {watchedSource.kind === "card" ? "Vai pra fatura do cartão" : "Sai da conta"}
+              {sourceHint(watchedType, watchedSource.kind)}
             </p>
           )}
           <div className="gap-sm flex">
@@ -507,6 +507,13 @@ export function NewTransactionForm({
       </form>
     </div>
   );
+}
+
+function sourceHint(type: "expense" | "income", kind: "wallet" | "card"): string {
+  if (type === "income") {
+    return kind === "card" ? "Abate a fatura (estorno)" : "Entra na conta";
+  }
+  return kind === "card" ? "Vai pra fatura do cartão" : "Sai da conta";
 }
 
 function PreviewRow({

@@ -3,9 +3,11 @@ import { Receipt } from "lucide-react";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { formatBRL } from "@/lib/format";
 import { formatDayMonth } from "@/application/services/invoice";
+import { cn } from "@/lib/utils";
 
 export interface InvoiceTransactionRow {
   id: string;
+  type: "expense" | "income";
   description: string;
   occurredAt: Date;
   categoryLabel: string;
@@ -67,10 +69,18 @@ export function InvoiceTransactionsList({ rows }: Props) {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-body-lg text-on-surface font-sans font-semibold">
+              <p
+                className={cn(
+                  "text-body-lg font-sans font-semibold",
+                  row.type === "income" ? "text-tertiary" : "text-on-surface",
+                )}
+              >
+                {row.type === "income" ? "−" : ""}
                 {formatBRL(row.amountCents)}
               </p>
-              {row.hasSplit ? (
+              {row.type === "income" ? (
+                <p className="text-label-sm text-tertiary font-mono">Abate fatura</p>
+              ) : row.hasSplit ? (
                 <p className="text-label-sm text-primary font-mono">
                   Sua parte: {formatBRL(row.userShareCents)}
                 </p>
