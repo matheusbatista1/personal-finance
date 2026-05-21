@@ -5,9 +5,10 @@ import { shiftCompetence } from "@/lib/format";
 interface MonthSelectorProps {
   competence: string;
   label: string;
+  pathname?: string;
 }
 
-export function MonthSelector({ competence, label }: MonthSelectorProps) {
+export function MonthSelector({ competence, label, pathname = "/dashboard" }: MonthSelectorProps) {
   const prev = shiftCompetence(competence, -1);
   const next = shiftCompetence(competence, +1);
 
@@ -15,7 +16,7 @@ export function MonthSelector({ competence, label }: MonthSelectorProps) {
     <div className="self-center">
       <div className="glass-panel gap-md px-lg py-sm flex items-center justify-between rounded-full">
         <Link
-          href={{ pathname: "/dashboard", query: { m: prev } }}
+          href={{ pathname, query: { m: prev } }}
           aria-label="Mês anterior"
           className="p-xs text-on-surface-variant hover:bg-surface-variant/50 hover:text-primary rounded-full transition-colors"
         >
@@ -25,7 +26,7 @@ export function MonthSelector({ competence, label }: MonthSelectorProps) {
           {label}
         </h2>
         <Link
-          href={{ pathname: "/dashboard", query: { m: next } }}
+          href={{ pathname, query: { m: next } }}
           aria-label="Próximo mês"
           className="p-xs text-on-surface-variant hover:bg-surface-variant/50 hover:text-primary rounded-full transition-colors"
         >
