@@ -18,6 +18,8 @@ export interface TransactionListRow {
   sourceKind: "wallet" | "card";
   sourceLabel: string;
   operation: "card" | "pix" | "loan" | null;
+  installmentNumber: number;
+  installmentTotal: number;
 }
 
 interface Props {
@@ -65,6 +67,11 @@ export function TransactionsList({ rows }: Props) {
                 <div>
                   <h3 className="text-body-md text-on-surface font-sans font-medium">
                     {row.description}
+                    {row.installmentTotal > 1 ? (
+                      <span className="text-label-sm text-on-surface-variant ml-2 font-mono">
+                        {row.installmentNumber}/{row.installmentTotal}
+                      </span>
+                    ) : null}
                   </h3>
                   <div className="mt-xs gap-sm flex flex-wrap items-center">
                     <p className="text-label-sm text-on-surface-variant font-mono">

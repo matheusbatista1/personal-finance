@@ -66,6 +66,8 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
             { initial: "A", colorRole: "primary" },
           ],
           badge: { text: "Dividido 50%", tone: "primary" },
+          installmentNumber: 1,
+          installmentTotal: 1,
         },
         {
           id: "tx-uber",
@@ -77,6 +79,8 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
           amountCents: -4_590,
           participants: [],
           badge: { text: "Individual", tone: "muted" },
+          installmentNumber: 1,
+          installmentTotal: 1,
         },
         {
           id: "tx-condominio",
@@ -88,6 +92,8 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
           amountCents: -120_000,
           participants: [{ initial: "M", colorRole: "tertiary" }],
           badge: { text: "Mãe Total", tone: "tertiary" },
+          installmentNumber: 1,
+          installmentTotal: 1,
         },
       ],
     };

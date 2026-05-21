@@ -39,6 +39,8 @@ interface TransactionRow {
   user_share_cents: number | string;
   occurred_at: string;
   split_mode: "none" | "equal" | "custom";
+  installment_number: number | null;
+  installment_total: number | null;
   categories: CategoryRow | null;
   transaction_splits: SplitRow[];
 }
@@ -83,7 +85,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       this.supabase
         .from("transactions")
         .select(
-          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at)",
+          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at)",
         )
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
@@ -147,9 +149,8 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
 
     const receivableCents = contactsBreakdown.reduce((sum, row) => sum + row.totalCents, 0);
 
-    const recentTransactions: RecentTransactionRow[] = transactions
-      .slice(0, 5)
-      .map<RecentTransactionRow>((tx) => {
+    const recentTransactions: RecentTransactionRow[] = transactions.map<RecentTransactionRow>(
+      (tx) => {
         const participants: ParticipantBadge[] = (tx.transaction_splits ?? []).map((s) => {
           const contact = contacts.find((c) => c.id === s.contact_id);
           const initial = contact?.name.charAt(0).toUpperCase() ?? "?";
@@ -182,8 +183,11 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           amountCents: amountSigned,
           participants,
           badge,
+          installmentNumber: tx.installment_number ?? 1,
+          installmentTotal: tx.installment_total ?? 1,
         };
-      });
+      },
+    );
 
     return {
       competence,

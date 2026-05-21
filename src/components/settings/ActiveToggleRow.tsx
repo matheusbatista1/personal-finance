@@ -51,8 +51,8 @@ export function ActiveToggleRow({ kind, id, isActive, disabled }: Props) {
     >
       <span
         className={cn(
-          "absolute top-1 h-4 w-4 rounded-full transition-transform",
-          active ? "bg-primary translate-x-7" : "bg-on-surface-variant translate-x-1",
+          "absolute top-1 h-4 w-4 rounded-full transition-all",
+          active ? "bg-primary right-1" : "bg-on-surface-variant left-1",
         )}
       />
     </button>

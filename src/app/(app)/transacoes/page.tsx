@@ -42,6 +42,8 @@ interface TransactionRow {
   wallet_id: string | null;
   card_id: string | null;
   category_id: string | null;
+  installment_number: number | null;
+  installment_total: number | null;
   categories: { name: string; icon_name: string | null } | null;
   wallets: { name: string } | null;
   cards: { name: string } | null;
@@ -111,7 +113,7 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
   let query = supabase
     .from("transactions")
     .select(
-      "id, type, description, amount_cents, user_share_cents, occurred_at, split_mode, operation, wallet_id, card_id, category_id, categories(name, icon_name), wallets(name), cards(name)",
+      "id, type, description, amount_cents, user_share_cents, occurred_at, split_mode, operation, wallet_id, card_id, category_id, installment_number, installment_total, categories(name, icon_name), wallets(name), cards(name)",
     )
     .gte("occurred_at", lowerBoundIso)
     .lt("occurred_at", upperBoundIso)
@@ -153,6 +155,8 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
       sourceKind,
       sourceLabel,
       operation: tx.operation,
+      installmentNumber: tx.installment_number ?? 1,
+      installmentTotal: tx.installment_total ?? 1,
     };
   });
 

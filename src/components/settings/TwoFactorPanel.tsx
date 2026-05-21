@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { ShieldCheck, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
@@ -160,94 +161,98 @@ export function TwoFactorPanel() {
         </button>
       )}
 
-      {enrollment ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="bg-background/60 p-margin-mobile md:p-lg fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) cancelEnrollment();
-          }}
-        >
-          <div className="modal-glass p-md md:p-lg w-full max-w-[28rem] rounded-2xl">
-            <div className="mb-lg flex items-start justify-between">
-              <div>
-                <h2 className="text-headline-md text-on-surface font-sans font-semibold">
-                  Habilitar 2FA
-                </h2>
-                <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-                  Escaneie o QR no Google Authenticator, Authy ou 1Password e confirme com o código.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={cancelEnrollment}
-                aria-label="Cancelar"
-                className="text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface flex h-10 w-10 items-center justify-center rounded-full transition-colors"
-              >
-                <X size={20} aria-hidden />
-              </button>
-            </div>
+      {enrollment && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="bg-background/80 p-margin-mobile md:p-lg fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) cancelEnrollment();
+              }}
+            >
+              <div className="modal-glass p-md md:p-lg w-full max-w-[28rem] rounded-2xl">
+                <div className="mb-lg flex items-start justify-between">
+                  <div>
+                    <h2 className="text-headline-md text-on-surface font-sans font-semibold">
+                      Habilitar 2FA
+                    </h2>
+                    <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
+                      Escaneie o QR no Google Authenticator, Authy ou 1Password e confirme com o
+                      código.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={cancelEnrollment}
+                    aria-label="Cancelar"
+                    className="text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface flex h-10 w-10 items-center justify-center rounded-full transition-colors"
+                  >
+                    <X size={20} aria-hidden />
+                  </button>
+                </div>
 
-            <div className="space-y-md">
-              <div className="p-sm flex items-center justify-center rounded-xl bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element -- inline data URI from supabase, no remote optimization needed */}
-                <img
-                  src={enrollment.qrCode}
-                  alt="QR code para configurar 2FA"
-                  className="h-48 w-48"
-                />
+                <div className="space-y-md">
+                  <div className="p-sm flex items-center justify-center rounded-xl bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- inline data URI from supabase, no remote optimization needed */}
+                    <img
+                      src={enrollment.qrCode}
+                      alt="QR code para configurar 2FA"
+                      className="h-48 w-48"
+                    />
+                  </div>
+                  <div className="bg-surface-container-low p-sm rounded-lg">
+                    <p className="text-label-sm text-on-surface-variant mb-xs font-mono uppercase">
+                      Ou digite manualmente
+                    </p>
+                    <p className="text-body-md text-on-surface font-mono break-all select-all">
+                      {enrollment.secret}
+                    </p>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="totp-code"
+                      className="text-label-sm text-outline mb-xs block font-mono tracking-wider uppercase"
+                    >
+                      Código de 6 dígitos
+                    </label>
+                    <Input
+                      id="totp-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="000000"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      maxLength={6}
+                    />
+                  </div>
+                  {error ? <FormError>{error}</FormError> : null}
+                  <div className="gap-md flex justify-end">
+                    <button
+                      type="button"
+                      onClick={cancelEnrollment}
+                      className="text-label-md text-on-surface hover:bg-surface-variant/50 px-lg py-sm rounded-full font-mono transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmEnrollment}
+                      disabled={busy || code.length !== 6}
+                      className={cn(
+                        "primary-gradient-btn px-lg py-sm rounded-full font-sans font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60",
+                      )}
+                    >
+                      {busy ? "Verificando…" : "Confirmar"}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="bg-surface-container-low p-sm rounded-lg">
-                <p className="text-label-sm text-on-surface-variant mb-xs font-mono uppercase">
-                  Ou digite manualmente
-                </p>
-                <p className="text-body-md text-on-surface font-mono break-all select-all">
-                  {enrollment.secret}
-                </p>
-              </div>
-              <div>
-                <label
-                  htmlFor="totp-code"
-                  className="text-label-sm text-outline mb-xs block font-mono tracking-wider uppercase"
-                >
-                  Código de 6 dígitos
-                </label>
-                <Input
-                  id="totp-code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  maxLength={6}
-                />
-              </div>
-              {error ? <FormError>{error}</FormError> : null}
-              <div className="gap-md flex justify-end">
-                <button
-                  type="button"
-                  onClick={cancelEnrollment}
-                  className="text-label-md text-on-surface hover:bg-surface-variant/50 px-lg py-sm rounded-full font-mono transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmEnrollment}
-                  disabled={busy || code.length !== 6}
-                  className={cn(
-                    "primary-gradient-btn px-lg py-sm rounded-full font-sans font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60",
-                  )}
-                >
-                  {busy ? "Verificando…" : "Confirmar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

@@ -343,6 +343,12 @@ button:disabled,
   outline: none;
 }
 
+/* Prevent hover cascade: when one card is hovered, others ignore the mouse
+   so the visual lift doesn't accidentally land the cursor on a neighbor. */
+.wallet-stack:has(.wallet-card:hover) .wallet-card:not(:hover) {
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wallet-stack .wallet-card,
   .wallet-stack .wallet-card:hover {

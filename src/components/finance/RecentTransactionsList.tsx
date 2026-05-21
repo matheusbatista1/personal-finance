@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import type { RecentTransactionRow } from "@/application/dto/MonthlyDashboardDTO";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
@@ -7,6 +10,8 @@ import { cn } from "@/lib/utils";
 interface RecentTransactionsListProps {
   rows: RecentTransactionRow[];
 }
+
+const PAGE_SIZE = 5;
 
 const badgeTone: Record<RecentTransactionRow["badge"]["tone"], string> = {
   primary: "text-primary",
@@ -21,19 +26,28 @@ const participantColor: Record<string, string> = {
 };
 
 export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const visibleRows = rows.slice(0, visible);
+  const hasMore = visible < rows.length;
+
   return (
     <section className="gap-md flex flex-col">
       <h3 className="px-xs text-headline-md text-on-surface font-sans font-semibold">
         Transações Recentes
       </h3>
       <div className="glass-panel flex flex-col overflow-hidden rounded-xl">
-        {rows.map((row, idx) => (
+        {visibleRows.length === 0 ? (
+          <p className="p-md text-body-md text-on-surface-variant font-sans">
+            Nenhuma transação neste mês.
+          </p>
+        ) : null}
+        {visibleRows.map((row, idx) => (
           <Link
             key={row.id}
             href={`/gastos/${row.id}/editar`}
             className={cn(
               "group p-sm hover:bg-surface-variant/30 md:p-md focus-visible:ring-primary/50 flex cursor-pointer items-center justify-between transition-colors focus-visible:ring-2 focus-visible:outline-none",
-              idx < rows.length - 1 && "border-outline-variant/10 border-b",
+              idx < visibleRows.length - 1 && "border-outline-variant/10 border-b",
             )}
           >
             <div className="gap-sm md:gap-md flex items-center">
@@ -43,6 +57,11 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
               <div>
                 <div className="text-body-md text-on-surface font-sans font-medium">
                   {row.description}
+                  {row.installmentTotal > 1 ? (
+                    <span className="text-label-sm text-on-surface-variant ml-2 font-mono">
+                      {row.installmentNumber}/{row.installmentTotal}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="text-label-sm text-on-surface-variant font-mono">
                   {row.categoryLabel} • {row.whenLabel}
@@ -83,12 +102,15 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
           </Link>
         ))}
       </div>
-      <Link
-        href="/transacoes"
-        className="px-sm py-xs text-label-md text-primary hover:bg-primary/10 hover:text-on-primary-container cursor-pointer self-center rounded-full font-mono transition-colors"
-      >
-        Ver todas as transações
-      </Link>
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => setVisible((v) => v + PAGE_SIZE)}
+          className="px-sm py-xs text-label-md text-primary hover:bg-primary/10 hover:text-on-primary-container cursor-pointer self-center rounded-full font-mono transition-colors"
+        >
+          Ver mais ({rows.length - visible} restantes)
+        </button>
+      ) : null}
     </section>
   );
 }

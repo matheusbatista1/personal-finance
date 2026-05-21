@@ -1,4 +1,4 @@
-import { ArrowDownLeft, Landmark, MoreHorizontal } from "lucide-react";
+import { ArrowDownLeft, Landmark } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 
 interface BalanceCardsProps {
@@ -24,13 +24,6 @@ export function BalanceCards({ available, receivable }: BalanceCardsProps) {
             <Landmark size={18} aria-hidden />
             Saldo Disponível
           </span>
-          <button
-            type="button"
-            aria-label="Opções do saldo"
-            className="text-on-surface-variant hover:text-primary transition-colors"
-          >
-            <MoreHorizontal size={20} aria-hidden />
-          </button>
         </div>
         <div className="z-10">
           <div className="text-headline-lg text-on-surface font-sans font-bold">

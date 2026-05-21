@@ -32,6 +32,8 @@ export interface RecentTransactionRow {
     text: string;
     tone: BadgeTone;
   };
+  installmentNumber: number;
+  installmentTotal: number;
 }
 
 export interface MonthlyDashboardDTO {

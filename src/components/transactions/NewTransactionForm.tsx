@@ -461,10 +461,8 @@ export function NewTransactionForm({
                 >
                   <span
                     className={cn(
-                      "absolute top-1 h-4 w-4 rounded-full transition-transform",
-                      watchedDividido
-                        ? "bg-primary translate-x-7"
-                        : "bg-on-surface-variant translate-x-1",
+                      "absolute top-1 h-4 w-4 rounded-full transition-all",
+                      watchedDividido ? "bg-primary right-1" : "bg-on-surface-variant left-1",
                     )}
                   />
                 </span>
