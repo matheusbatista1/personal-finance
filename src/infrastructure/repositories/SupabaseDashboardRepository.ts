@@ -8,6 +8,7 @@ import type {
 import type { IDashboardRepository } from "@/application/repositories/IDashboardRepository";
 import type { ContactColorRole } from "@/domain/contact/Contact";
 import { formatCompetence } from "@/lib/format";
+import { effectiveBalance, fetchWalletNetFlows } from "@/infrastructure/services/walletBalances";
 
 interface ContactRow {
   id: string;
@@ -15,6 +16,7 @@ interface ContactRow {
 }
 
 interface WalletRow {
+  id: string;
   balance_cents: number | string;
 }
 
@@ -74,9 +76,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString();
     const endDate = new Date(Date.UTC(year, month, 1)).toISOString();
 
-    const [contactsRes, walletsRes, txRes] = await Promise.all([
+    const [contactsRes, walletsRes, txRes, netFlows] = await Promise.all([
       this.supabase.from("contacts").select("id, name").order("name"),
-      this.supabase.from("wallets").select("balance_cents"),
+      this.supabase.from("wallets").select("id, balance_cents"),
       this.supabase
         .from("transactions")
         .select(
@@ -85,6 +87,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
         .order("occurred_at", { ascending: false }),
+      fetchWalletNetFlows(this.supabase),
     ]);
 
     const contacts = ((contactsRes.data ?? []) as unknown as ContactRow[]) ?? [];
@@ -94,7 +97,10 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const expenseTransactions = transactions.filter((tx) => tx.type === "expense");
     const incomeTransactions = transactions.filter((tx) => tx.type === "income");
 
-    const availableCents = wallets.reduce((sum, w) => sum + toNumber(w.balance_cents), 0);
+    const availableCents = wallets.reduce(
+      (sum, w) => sum + effectiveBalance(toNumber(w.balance_cents), netFlows.get(w.id)),
+      0,
+    );
     const userTotalCents = expenseTransactions.reduce(
       (sum, t) => sum + toNumber(t.user_share_cents),
       0,

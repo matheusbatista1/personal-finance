@@ -5,6 +5,7 @@ import { BankList, type BankRow } from "@/components/wallets/BankList";
 import { WalletTotals } from "@/components/wallets/WalletTotals";
 import { AddWalletDialog, type BankOption } from "@/components/wallets/AddWalletDialog";
 import { AddCardDialog, type WalletOption } from "@/components/wallets/AddCardDialog";
+import { effectiveBalance, fetchWalletNetFlows } from "@/infrastructure/services/walletBalances";
 
 export const metadata = {
   title: "Carteira — FinLux",
@@ -41,7 +42,7 @@ export default async function CarteiraPage() {
   await requireUser();
   const supabase = await createClient();
 
-  const [walletsRes, cardsRes, banksRes] = await Promise.all([
+  const [walletsRes, cardsRes, banksRes, netFlows] = await Promise.all([
     supabase
       .from("wallets")
       .select(
@@ -54,6 +55,7 @@ export default async function CarteiraPage() {
       .select("id, name, color, credit_limit_cents, due_day")
       .order("created_at", { ascending: true }),
     supabase.from("banks").select("id, name, short_name").order("name"),
+    fetchWalletNetFlows(supabase),
   ]);
 
   const wallets = ((walletsRes.data ?? []) as unknown as WalletQueryRow[]) ?? [];
@@ -79,7 +81,7 @@ export default async function CarteiraPage() {
     bankName: wallet.banks?.name ?? null,
     brandColor: wallet.banks?.brand_color ?? null,
     shortName: wallet.banks?.short_name ?? null,
-    balanceCents: toNumber(wallet.balance_cents),
+    balanceCents: effectiveBalance(toNumber(wallet.balance_cents), netFlows.get(wallet.id)),
     accountType: wallet.account_type,
     isDefault: wallet.is_default,
   }));
