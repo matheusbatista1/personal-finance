@@ -24,6 +24,7 @@ interface SplitRow {
   contact_id: string;
   amount_cents: number | string;
   settled_at?: string | null;
+  is_custom?: boolean;
 }
 
 interface CategoryRow {
@@ -85,7 +86,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       this.supabase
         .from("transactions")
         .select(
-          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at)",
+          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at, is_custom)",
         )
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
@@ -117,16 +118,18 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       0,
     );
 
+    // "Dividido" vs "Direto" é por split, não por transação inteira: o flag is_custom
+    // identifica splits com valor fixo (Direto) vs rateio igualitário (Dividido).
     const breakdownMap = new Map<string, { split: number; individual: number }>();
     for (const tx of expenseTransactions) {
       for (const split of tx.transaction_splits ?? []) {
-        if (split.settled_at) continue; // já pago, não entra em receivable
+        if (split.settled_at) continue;
         const entry = breakdownMap.get(split.contact_id) ?? { split: 0, individual: 0 };
         const amount = toNumber(split.amount_cents);
-        if (tx.split_mode === "equal") {
-          entry.split += amount;
-        } else if (tx.split_mode === "custom") {
+        if (split.is_custom) {
           entry.individual += amount;
+        } else {
+          entry.split += amount;
         }
         breakdownMap.set(split.contact_id, entry);
       }

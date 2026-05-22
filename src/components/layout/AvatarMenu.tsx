@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LogOut, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { signOut } from "@/actions/auth";
 
 interface Props {
@@ -47,24 +47,6 @@ export function AvatarMenu({ initial }: Props) {
           >
             <UserRound size={16} aria-hidden />
             Editar perfil
-          </Link>
-          <Link
-            role="menuitem"
-            href="/perfil#seguranca"
-            onClick={() => setOpen(false)}
-            className="gap-sm px-md py-sm text-body-md text-on-surface hover:bg-primary-container/20 hover:text-primary flex cursor-pointer items-center font-sans transition-colors"
-          >
-            <ShieldCheck size={16} aria-hidden />
-            Segurança
-          </Link>
-          <Link
-            role="menuitem"
-            href="/perfil#preferencias"
-            onClick={() => setOpen(false)}
-            className="gap-sm px-md py-sm text-body-md text-on-surface hover:bg-primary-container/20 hover:text-primary flex cursor-pointer items-center font-sans transition-colors"
-          >
-            <Sparkles size={16} aria-hidden />
-            Preferências
           </Link>
           <div className="border-outline-variant/20 mx-md my-1 border-t" />
           <form action={signOut}>

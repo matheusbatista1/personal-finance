@@ -384,49 +384,65 @@ export function NewTransactionForm({
           </div>
 
           <div>
-            <span className="text-label-sm text-on-surface-variant mb-xs block font-mono tracking-wider uppercase">
+            <label
+              htmlFor="source-select"
+              className="text-label-sm text-on-surface-variant mb-xs block font-mono tracking-wider uppercase"
+            >
               Origem
-            </span>
+            </label>
             <Controller
               control={control}
               name="source"
-              render={({ field }) => (
-                <div className="gap-sm flex flex-wrap">
-                  {sources.length === 0 ? (
+              render={({ field }) => {
+                if (sources.length === 0) {
+                  return (
                     <p className="text-body-md text-on-surface-variant font-sans">
                       Cadastre uma conta ou cartão primeiro.
                     </p>
-                  ) : null}
-                  {sources.map((source) => {
-                    const selected =
-                      field.value.kind === source.kind && field.value.id === source.id;
-                    const Icon = source.kind === "wallet" ? Wallet : CreditCard;
-                    return (
-                      <button
-                        key={`${source.kind}-${source.id}`}
-                        type="button"
-                        onClick={() => field.onChange({ kind: source.kind, id: source.id })}
-                        className={cn(
-                          "glass-panel gap-sm py-sm px-md flex items-center rounded-lg transition-all",
-                          selected
-                            ? "border-primary/50 bg-primary-container/10 text-primary"
-                            : "text-on-surface-variant hover:bg-surface-variant/30",
-                        )}
-                      >
-                        <Icon size={18} aria-hidden />
-                        <div className="text-left">
-                          <div className="text-label-md font-mono">{source.label}</div>
-                          {source.hint ? (
-                            <div className="text-label-sm text-on-surface-variant font-mono">
-                              {source.hint}
-                            </div>
-                          ) : null}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                  );
+                }
+                const walletSources = sources.filter((s) => s.kind === "wallet");
+                const cardSources = sources.filter((s) => s.kind === "card");
+                const currentKey = `${field.value.kind}:${field.value.id}`;
+                const Icon = field.value.kind === "wallet" ? Wallet : CreditCard;
+                return (
+                  <div className="gap-sm flex items-center">
+                    <Icon size={18} aria-hidden className="text-on-surface-variant shrink-0" />
+                    <select
+                      id="source-select"
+                      value={currentKey}
+                      onChange={(e) => {
+                        const [kind, id] = e.target.value.split(":");
+                        if (kind === "wallet" || kind === "card") {
+                          field.onChange({ kind, id });
+                        }
+                      }}
+                      className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm flex-1 rounded-md border-b font-sans outline-none focus:ring-0"
+                    >
+                      {walletSources.length > 0 ? (
+                        <optgroup label="Contas">
+                          {walletSources.map((s) => (
+                            <option key={s.id} value={`wallet:${s.id}`}>
+                              {s.label}
+                              {s.hint ? ` · ${s.hint}` : ""}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null}
+                      {cardSources.length > 0 ? (
+                        <optgroup label="Cartões">
+                          {cardSources.map((s) => (
+                            <option key={s.id} value={`card:${s.id}`}>
+                              {s.label}
+                              {s.hint ? ` · ${s.hint}` : ""}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null}
+                    </select>
+                  </div>
+                );
+              }}
             />
             <FormError>{errors.source?.message as string | undefined}</FormError>
           </div>

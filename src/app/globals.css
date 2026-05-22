@@ -337,8 +337,8 @@ button:disabled,
 
 .wallet-stack .wallet-card:hover,
 .wallet-stack .wallet-card:focus-visible {
-  transform: translateY(-170px) translateZ(80px) scale(1.02);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+  transform: translateY(-140px) translateZ(40px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
   z-index: 50;
   outline: none;
 }
