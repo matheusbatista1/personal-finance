@@ -12,7 +12,13 @@ import { createClient } from "@/infrastructure/database/supabase/server";
 import { materializeRecurring } from "@/infrastructure/services/recurring";
 
 interface DashboardPageProps {
-  searchParams: Promise<{ m?: string; view?: string; people?: string }>;
+  searchParams: Promise<{
+    m?: string;
+    view?: string;
+    people?: string;
+    cards?: string;
+    wallets?: string;
+  }>;
 }
 
 function resolveCompetence(input?: string): { year: number; month: number; raw: string } {
@@ -48,13 +54,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { year, month, raw } = resolveCompetence(params.m);
   const view = normalizeView(params.view);
   const peopleIds = parsePeople(params.people);
+  const cardIds = parsePeople(params.cards);
+  const walletIds = parsePeople(params.wallets);
 
   const user = await requireUser();
   const supabase = await createClient();
   await materializeRecurring(supabase, user.id, year, month);
 
   const useCase = await makeComputeMonthlyDashboard();
-  const dashboard = await useCase.execute({ year, month, view, peopleIds });
+  const dashboard = await useCase.execute({
+    year,
+    month,
+    view,
+    peopleIds,
+    cardIds,
+    walletIds,
+  });
 
   return (
     <>
@@ -62,7 +77,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <DashboardFilters
         view={view}
         selectedPeopleIds={peopleIds}
+        selectedCardIds={cardIds}
+        selectedWalletIds={walletIds}
         contacts={dashboard.allContacts}
+        cards={dashboard.allCards}
+        wallets={dashboard.allWallets}
       />
       <MonthlyHeroCard totalCents={dashboard.user.totalCents} view={view} />
       <BalanceCards
@@ -75,10 +94,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           progress: dashboard.receivable.progress,
         }}
       />
-      <SplitResumesPanel
-        rows={dashboard.contactsBreakdown}
-        globalTotalCents={dashboard.totalsAll.totalCents}
-      />
+      {view === "overview" ? (
+        <SplitResumesPanel
+          rows={dashboard.contactsBreakdown}
+          globalTotalCents={dashboard.totalsAll.totalCents}
+        />
+      ) : null}
       <RecentTransactionsList rows={dashboard.recentTransactions} />
       <Fab />
     </>

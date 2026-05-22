@@ -103,6 +103,8 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
         { id: "arthur", name: "Arthur", initial: "A", colorRole: "primary" },
         { id: "mae", name: "Mãe", initial: "M", colorRole: "tertiary" },
       ],
+      allCards: [],
+      allWallets: [],
     };
   }
 }

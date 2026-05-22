@@ -5,6 +5,7 @@ import type {
   MonthlyDashboardDTO,
   ParticipantBadge,
   RecentTransactionRow,
+  SourceOptionRow,
 } from "@/application/dto/MonthlyDashboardDTO";
 import type {
   DashboardQuery,
@@ -21,7 +22,15 @@ interface ContactRow {
 
 interface WalletRow {
   id: string;
+  name: string;
   balance_cents: number | string;
+  is_active: boolean;
+}
+
+interface CardRow {
+  id: string;
+  name: string;
+  is_active: boolean;
 }
 
 interface SplitRow {
@@ -46,6 +55,8 @@ interface TransactionRow {
   split_mode: "none" | "equal" | "custom";
   installment_number: number | null;
   installment_total: number | null;
+  wallet_id: string | null;
+  card_id: string | null;
   categories: CategoryRow | null;
   transaction_splits: SplitRow[];
 }
@@ -82,17 +93,20 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const { year, month } = input;
     const view = input.view ?? "overview";
     const peopleIds = input.peopleIds ?? [];
+    const cardIds = input.cardIds ?? [];
+    const walletIds = input.walletIds ?? [];
     const competence = `${year}-${String(month).padStart(2, "0")}`;
     const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString();
     const endDate = new Date(Date.UTC(year, month, 1)).toISOString();
 
-    const [contactsRes, walletsRes, txRes, netFlows] = await Promise.all([
+    const [contactsRes, walletsRes, cardsRes, txRes, netFlows] = await Promise.all([
       this.supabase.from("contacts").select("id, name").order("name"),
-      this.supabase.from("wallets").select("id, balance_cents"),
+      this.supabase.from("wallets").select("id, name, balance_cents, is_active").order("name"),
+      this.supabase.from("cards").select("id, name, is_active").order("name"),
       this.supabase
         .from("transactions")
         .select(
-          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at, is_custom)",
+          "id, description, type, amount_cents, user_share_cents, occurred_at, split_mode, installment_number, installment_total, wallet_id, card_id, categories(name, icon_name), transaction_splits(contact_id, amount_cents, settled_at, is_custom)",
         )
         .gte("occurred_at", startDate)
         .lt("occurred_at", endDate)
@@ -102,22 +116,37 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
 
     const contacts = ((contactsRes.data ?? []) as unknown as ContactRow[]) ?? [];
     const wallets = ((walletsRes.data ?? []) as unknown as WalletRow[]) ?? [];
+    const cards = ((cardsRes.data ?? []) as unknown as CardRow[]) ?? [];
     const transactions = ((txRes.data ?? []) as unknown as TransactionRow[]) ?? [];
 
     const peopleFilterSet = new Set(peopleIds);
+    const cardFilterSet = new Set(cardIds);
+    const walletFilterSet = new Set(walletIds);
     const isFilteringPeople = peopleFilterSet.size > 0;
+    const isFilteringCards = cardFilterSet.size > 0;
+    const isFilteringWallets = walletFilterSet.size > 0;
 
-    function matchesPeopleFilter(tx: TransactionRow): boolean {
-      if (!isFilteringPeople) return true;
-      return (tx.transaction_splits ?? []).some((s) => peopleFilterSet.has(s.contact_id));
+    function matchesFilters(tx: TransactionRow): boolean {
+      if (isFilteringPeople) {
+        const hit = (tx.transaction_splits ?? []).some((s) => peopleFilterSet.has(s.contact_id));
+        if (!hit) return false;
+      }
+      if (isFilteringCards && (!tx.card_id || !cardFilterSet.has(tx.card_id))) return false;
+      if (isFilteringWallets && (!tx.wallet_id || !walletFilterSet.has(tx.wallet_id))) return false;
+      // In "mine" view, hide transactions where the user has no share (e.g. paid for someone else
+      // and the entire amount belongs to that contact).
+      if (view === "mine" && tx.type === "expense" && toNumber(tx.user_share_cents) <= 0) {
+        return false;
+      }
+      return true;
     }
 
     const expenseTransactions = transactions
       .filter((tx) => tx.type === "expense")
-      .filter(matchesPeopleFilter);
+      .filter(matchesFilters);
     const incomeTransactions = transactions
       .filter((tx) => tx.type === "income")
-      .filter(matchesPeopleFilter);
+      .filter(matchesFilters);
 
     const availableCents = wallets.reduce(
       (sum, w) => sum + effectiveBalance(toNumber(w.balance_cents), netFlows.get(w.id)),
@@ -174,7 +203,7 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const receivableCents = contactsBreakdown.reduce((sum, row) => sum + row.totalCents, 0);
 
     const recentTransactions: RecentTransactionRow[] = transactions
-      .filter(matchesPeopleFilter)
+      .filter(matchesFilters)
       .map<RecentTransactionRow>((tx) => {
         const participants: ParticipantBadge[] = (tx.transaction_splits ?? []).map((s) => {
           const contact = contacts.find((c) => c.id === s.contact_id);
@@ -219,6 +248,12 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       initial: c.name.charAt(0).toUpperCase(),
       colorRole: PALETTE[idx % PALETTE.length] ?? "primary",
     }));
+    const allCards: SourceOptionRow[] = cards
+      .filter((c) => c.is_active)
+      .map((c) => ({ id: c.id, name: c.name }));
+    const allWallets: SourceOptionRow[] = wallets
+      .filter((w) => w.is_active)
+      .map((w) => ({ id: w.id, name: w.name }));
 
     return {
       competence,
@@ -231,6 +266,8 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       contactsBreakdown,
       recentTransactions,
       allContacts,
+      allCards,
+      allWallets,
     };
   }
 }

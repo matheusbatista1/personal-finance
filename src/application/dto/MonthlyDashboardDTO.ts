@@ -43,6 +43,11 @@ export interface AllContactsRow {
   colorRole: ContactColorRole;
 }
 
+export interface SourceOptionRow {
+  id: string;
+  name: string;
+}
+
 export interface MonthlyDashboardDTO {
   competence: string;
   competenceLabel: string;
@@ -66,4 +71,6 @@ export interface MonthlyDashboardDTO {
   contactsBreakdown: ContactBreakdownRow[];
   recentTransactions: RecentTransactionRow[];
   allContacts: AllContactsRow[];
+  allCards: SourceOptionRow[];
+  allWallets: SourceOptionRow[];
 }
