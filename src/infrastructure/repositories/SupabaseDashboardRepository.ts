@@ -1,11 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  AllContactsRow,
   ContactBreakdownRow,
   MonthlyDashboardDTO,
   ParticipantBadge,
   RecentTransactionRow,
 } from "@/application/dto/MonthlyDashboardDTO";
-import type { IDashboardRepository } from "@/application/repositories/IDashboardRepository";
+import type {
+  DashboardQuery,
+  IDashboardRepository,
+} from "@/application/repositories/IDashboardRepository";
 import type { ContactColorRole } from "@/domain/contact/Contact";
 import { formatCompetence } from "@/lib/format";
 import { effectiveBalance, fetchWalletNetFlows } from "@/infrastructure/services/walletBalances";
@@ -74,8 +78,10 @@ function formatWhen(isoDate: string, now: Date = new Date()): string {
 export class SupabaseDashboardRepository implements IDashboardRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async findByCompetence(input: { year: number; month: number }): Promise<MonthlyDashboardDTO> {
+  async findByCompetence(input: DashboardQuery): Promise<MonthlyDashboardDTO> {
     const { year, month } = input;
+    const view = input.view ?? "overview";
+    const peopleIds = input.peopleIds ?? [];
     const competence = `${year}-${String(month).padStart(2, "0")}`;
     const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString();
     const endDate = new Date(Date.UTC(year, month, 1)).toISOString();
@@ -98,8 +104,20 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const wallets = ((walletsRes.data ?? []) as unknown as WalletRow[]) ?? [];
     const transactions = ((txRes.data ?? []) as unknown as TransactionRow[]) ?? [];
 
-    const expenseTransactions = transactions.filter((tx) => tx.type === "expense");
-    const incomeTransactions = transactions.filter((tx) => tx.type === "income");
+    const peopleFilterSet = new Set(peopleIds);
+    const isFilteringPeople = peopleFilterSet.size > 0;
+
+    function matchesPeopleFilter(tx: TransactionRow): boolean {
+      if (!isFilteringPeople) return true;
+      return (tx.transaction_splits ?? []).some((s) => peopleFilterSet.has(s.contact_id));
+    }
+
+    const expenseTransactions = transactions
+      .filter((tx) => tx.type === "expense")
+      .filter(matchesPeopleFilter);
+    const incomeTransactions = transactions
+      .filter((tx) => tx.type === "income")
+      .filter(matchesPeopleFilter);
 
     const availableCents = wallets.reduce(
       (sum, w) => sum + effectiveBalance(toNumber(w.balance_cents), netFlows.get(w.id)),
@@ -117,6 +135,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       (sum, t) => sum + toNumber(t.amount_cents),
       0,
     );
+    // The hero card shows the user's share by default ("Minhas Gastos"). "Visão Geral"
+    // surfaces the full month total including everyone's share.
+    const heroTotalCents = view === "overview" ? globalTotalCents : userTotalCents;
 
     // "Dividido" vs "Direto" é por split, não por transação inteira: o flag is_custom
     // identifica splits com valor fixo (Direto) vs rateio igualitário (Dividido).
@@ -152,8 +173,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
 
     const receivableCents = contactsBreakdown.reduce((sum, row) => sum + row.totalCents, 0);
 
-    const recentTransactions: RecentTransactionRow[] = transactions.map<RecentTransactionRow>(
-      (tx) => {
+    const recentTransactions: RecentTransactionRow[] = transactions
+      .filter(matchesPeopleFilter)
+      .map<RecentTransactionRow>((tx) => {
         const participants: ParticipantBadge[] = (tx.transaction_splits ?? []).map((s) => {
           const contact = contacts.find((c) => c.id === s.contact_id);
           const initial = contact?.name.charAt(0).toUpperCase() ?? "?";
@@ -189,19 +211,26 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           installmentNumber: tx.installment_number ?? 1,
           installmentTotal: tx.installment_total ?? 1,
         };
-      },
-    );
+      });
+
+    const allContacts: AllContactsRow[] = contacts.map((c, idx) => ({
+      id: c.id,
+      name: c.name,
+      initial: c.name.charAt(0).toUpperCase(),
+      colorRole: PALETTE[idx % PALETTE.length] ?? "primary",
+    }));
 
     return {
       competence,
       competenceLabel: formatCompetence(year, month),
-      user: { totalCents: userTotalCents },
+      user: { totalCents: heroTotalCents },
       totalsAll: { totalCents: globalTotalCents },
       income: { totalCents: incomeTotalCents },
       balance: { availableCents, deltaPct: 0 },
       receivable: { amountCents: receivableCents, progress: 0 },
       contactsBreakdown,
       recentTransactions,
+      allContacts,
     };
   }
 }

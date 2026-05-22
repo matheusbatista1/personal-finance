@@ -1,10 +1,10 @@
 import type { MonthlyDashboardDTO } from "@/application/dto/MonthlyDashboardDTO";
-import type { IDashboardRepository } from "@/application/repositories/IDashboardRepository";
+import type {
+  DashboardQuery,
+  IDashboardRepository,
+} from "@/application/repositories/IDashboardRepository";
 
-export interface ComputeMonthlyDashboardInput {
-  year: number;
-  month: number;
-}
+export type ComputeMonthlyDashboardInput = DashboardQuery;
 
 export class ComputeMonthlyDashboard {
   constructor(private readonly repository: IDashboardRepository) {}

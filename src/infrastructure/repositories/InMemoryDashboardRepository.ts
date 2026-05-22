@@ -1,5 +1,8 @@
 import type { MonthlyDashboardDTO } from "@/application/dto/MonthlyDashboardDTO";
-import type { IDashboardRepository } from "@/application/repositories/IDashboardRepository";
+import type {
+  DashboardQuery,
+  IDashboardRepository,
+} from "@/application/repositories/IDashboardRepository";
 import { formatCompetence } from "@/lib/format";
 
 /**
@@ -8,7 +11,7 @@ import { formatCompetence } from "@/lib/format";
  * but produces identical data until a real repository is wired in the next round.
  */
 export class InMemoryDashboardRepository implements IDashboardRepository {
-  async findByCompetence(input: { year: number; month: number }): Promise<MonthlyDashboardDTO> {
+  async findByCompetence(input: DashboardQuery): Promise<MonthlyDashboardDTO> {
     const { year, month } = input;
     const competence = `${year}-${String(month).padStart(2, "0")}`;
 
@@ -95,6 +98,10 @@ export class InMemoryDashboardRepository implements IDashboardRepository {
           installmentNumber: 1,
           installmentTotal: 1,
         },
+      ],
+      allContacts: [
+        { id: "arthur", name: "Arthur", initial: "A", colorRole: "primary" },
+        { id: "mae", name: "Mãe", initial: "M", colorRole: "tertiary" },
       ],
     };
   }

@@ -36,6 +36,13 @@ export interface RecentTransactionRow {
   installmentTotal: number;
 }
 
+export interface AllContactsRow {
+  id: string;
+  name: string;
+  initial: string;
+  colorRole: ContactColorRole;
+}
+
 export interface MonthlyDashboardDTO {
   competence: string;
   competenceLabel: string;
@@ -58,4 +65,5 @@ export interface MonthlyDashboardDTO {
   };
   contactsBreakdown: ContactBreakdownRow[];
   recentTransactions: RecentTransactionRow[];
+  allContacts: AllContactsRow[];
 }
