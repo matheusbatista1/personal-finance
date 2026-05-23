@@ -4,7 +4,7 @@
   "private": true,
   "description": "Personal finance app with accounts, cards, invoices, and smart expense splitting.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
