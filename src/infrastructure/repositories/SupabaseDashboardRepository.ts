@@ -168,15 +168,20 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     // surfaces the full month total including everyone's share.
     const heroTotalCents = view === "overview" ? globalTotalCents : userTotalCents;
 
-    // "Dividido" vs "Direto" é por split, não por transação inteira: o flag is_custom
-    // identifica splits com valor fixo (Direto) vs rateio igualitário (Dividido).
+    // "Direto" só conta quando UMA pessoa cobre 100% sozinha da transação
+    // (usuário não participa e há um único split). Caso contrário é "Dividido",
+    // mesmo que algum participante tenha valor custom — o gasto continua sendo
+    // compartilhado entre múltiplas pessoas.
     const breakdownMap = new Map<string, { split: number; individual: number }>();
     for (const tx of expenseTransactions) {
-      for (const split of tx.transaction_splits ?? []) {
+      const splits = tx.transaction_splits ?? [];
+      const userShare = toNumber(tx.user_share_cents);
+      const isDirect = userShare === 0 && splits.length === 1;
+      for (const split of splits) {
         if (split.settled_at) continue;
         const entry = breakdownMap.get(split.contact_id) ?? { split: 0, individual: 0 };
         const amount = toNumber(split.amount_cents);
-        if (split.is_custom) {
+        if (isDirect) {
           entry.individual += amount;
         } else {
           entry.split += amount;

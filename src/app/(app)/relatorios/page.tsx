@@ -50,6 +50,8 @@ interface SplitJoinRow {
     occurred_at: string;
     installment_number: number | null;
     installment_total: number | null;
+    amount_cents: number | string;
+    user_share_cents: number | string;
   } | null;
 }
 
@@ -106,7 +108,7 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     supabase
       .from("transaction_splits")
       .select(
-        "amount_cents, is_custom, contact_id, contacts(name), transactions!inner(id, description, occurred_at, installment_number, installment_total)",
+        "amount_cents, is_custom, contact_id, contacts(name), transactions!inner(id, description, occurred_at, installment_number, installment_total, amount_cents, user_share_cents)",
       )
       .gte("transactions.occurred_at", window.startIso)
       .lt("transactions.occurred_at", window.endIso),
@@ -169,20 +171,33 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
   }
   const trendPoints = [...trendBuckets.values()];
 
+  // Count how many splits each transaction has, so we can detect "Direto"
+  // (transação onde uma pessoa cobra 100% sozinha) vs "Dividido" (qualquer outro caso).
+  const splitsByTxId = new Map<string, number>();
+  for (const split of splits) {
+    const txId = split.transactions?.id;
+    if (!txId) continue;
+    splitsByTxId.set(txId, (splitsByTxId.get(txId) ?? 0) + 1);
+  }
+
   const contactMap = new Map<string, ContactBreakdownRow>();
   for (const split of splits) {
     const amount = toNumber(split.amount_cents);
+    const txId = split.transactions?.id;
+    const txUserShare = split.transactions ? toNumber(split.transactions.user_share_cents) : 0;
+    const txSplitCount = txId ? (splitsByTxId.get(txId) ?? 1) : 1;
+    const isDirect = txUserShare === 0 && txSplitCount === 1;
     const existing = contactMap.get(split.contact_id);
     if (existing) {
-      if (split.is_custom) existing.customCents += amount;
+      if (isDirect) existing.customCents += amount;
       else existing.equalCents += amount;
       existing.totalCents += amount;
     } else {
       contactMap.set(split.contact_id, {
         contactId: split.contact_id,
         name: split.contacts?.name ?? "Sem nome",
-        equalCents: split.is_custom ? 0 : amount,
-        customCents: split.is_custom ? amount : 0,
+        equalCents: isDirect ? 0 : amount,
+        customCents: isDirect ? amount : 0,
         totalCents: amount,
       });
     }
