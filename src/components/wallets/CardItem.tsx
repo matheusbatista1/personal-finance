@@ -36,7 +36,6 @@ export function CardItem({
     <Link
       href={`/fatura/${id}`}
       aria-label={`Abrir fatura de ${name}`}
-      onMouseEnter={onActivate}
       onFocus={onActivate}
       className={cn(
         "wallet-card p-md focus-visible:ring-primary/50 relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10 focus-visible:ring-2 focus-visible:outline-none",
