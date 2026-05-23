@@ -186,6 +186,37 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle leather texture behind every page. The radial gradient overlay keeps
+   the texture as ambience only — content stays the focus. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(10, 10, 10, 0.55) 0%,
+      rgba(10, 10, 10, 0.85) 60%,
+      rgba(10, 10, 10, 0.95) 100%
+    ),
+    url("/textures/leather.png") center / cover no-repeat fixed;
+  opacity: 0.7;
+}
+
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(245, 245, 247, 0.6) 0%,
+      rgba(245, 245, 247, 0.85) 60%,
+      rgba(245, 245, 247, 0.95) 100%
+    ),
+    url("/textures/leather.png") center / cover no-repeat fixed;
+  opacity: 0.4;
+}
+
 ::selection {
   background-color: var(--color-primary-container);
   color: var(--color-on-primary-container);
