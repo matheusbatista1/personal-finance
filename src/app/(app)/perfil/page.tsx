@@ -6,6 +6,7 @@ import { DangerZone } from "@/components/settings/DangerZone";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { ChangePasswordDialog } from "@/components/settings/ChangePasswordDialog";
 import { TwoFactorPanel } from "@/components/settings/TwoFactorPanel";
+import { AvatarUploader } from "@/components/settings/AvatarUploader";
 
 export const metadata = {
   title: "Perfil — FinLux",
@@ -17,9 +18,11 @@ export default async function PerfilPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, created_at")
+    .select("display_name, avatar_url, created_at")
     .eq("id", user.id)
     .single();
+
+  const avatarUrl = (profile?.avatar_url as string | null) ?? null;
 
   const memberSince = profile?.created_at
     ? new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(
@@ -41,9 +44,14 @@ export default async function PerfilPage() {
 
       <section className="glass-panel p-md md:p-lg mb-lg gap-md flex flex-col rounded-2xl md:flex-row md:items-center md:justify-between">
         <div className="gap-md flex items-center">
-          <div className="bg-primary-container/20 text-primary text-headline-md flex h-16 w-16 items-center justify-center rounded-2xl font-mono font-semibold">
-            {(profile?.display_name ?? user.email ?? "?").toString().charAt(0).toUpperCase()}
-          </div>
+          <AvatarUploader
+            currentUrl={avatarUrl}
+            initial={(profile?.display_name ?? user.email ?? "?")
+              .toString()
+              .charAt(0)
+              .toUpperCase()}
+            displayName={(profile?.display_name as string | null) ?? user.email ?? "Usuário"}
+          />
           <div>
             <h2 className="text-headline-md text-on-surface font-sans font-semibold">
               {(profile?.display_name as string | null) ?? "Sem nome"}

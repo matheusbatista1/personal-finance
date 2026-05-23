@@ -9,11 +9,16 @@ export async function TopBar() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   const profile = data.user
-    ? await supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle()
+    ? await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", data.user.id)
+        .maybeSingle()
     : null;
   const displayName =
     (profile?.data?.display_name as string | undefined) ?? data.user?.email ?? "?";
   const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = (profile?.data?.avatar_url as string | undefined) ?? null;
 
   return (
     <header className="border-outline-variant/10 bg-surface/60 px-lg py-md fixed top-0 right-0 z-40 flex w-full items-center justify-between border-b backdrop-blur-xl md:ml-64 md:w-[calc(100%-256px)]">
@@ -30,7 +35,7 @@ export async function TopBar() {
         >
           <Plus size={22} aria-hidden />
         </Link>
-        <AvatarMenu initial={initial} />
+        <AvatarMenu initial={initial} avatarUrl={avatarUrl} displayName={displayName} />
       </div>
     </header>
   );

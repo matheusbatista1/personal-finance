@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { LogOut, UserRound } from "lucide-react";
 import { signOut } from "@/actions/auth";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface Props {
   initial: string;
+  avatarUrl?: string | null;
+  displayName?: string;
 }
 
-export function AvatarMenu({ initial }: Props) {
+export function AvatarMenu({ initial, avatarUrl, displayName = "Usuário" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -30,9 +33,9 @@ export function AvatarMenu({ initial }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Menu do usuário"
-        className="border-outline-variant/20 bg-surface-container-high text-label-sm text-primary hover:border-primary/50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border font-mono font-semibold transition-colors"
+        className="hover:ring-primary/50 flex cursor-pointer items-center rounded-full transition-all hover:ring-2"
       >
-        {initial}
+        <Avatar src={avatarUrl} alt={displayName} initial={initial} size={40} />
       </button>
       {open ? (
         <div
