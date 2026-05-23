@@ -1,4 +1,5 @@
 import { Key, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
@@ -16,6 +17,7 @@ export const metadata = {
 export default async function PerfilPage() {
   const user = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("profile");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -35,12 +37,12 @@ export default async function PerfilPage() {
     <>
       <header className="mb-lg">
         <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-          Conta
+          {t("kicker")}
         </span>
-        <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">Perfil</h1>
-        <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-          Sua identidade, segurança e preferências.
-        </p>
+        <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
+          {t("title")}
+        </h1>
+        <p className="text-body-md text-on-surface-variant mt-sm font-sans">{t("subtitle")}</p>
       </header>
 
       <section className="glass-panel p-md md:p-lg mb-lg gap-md flex flex-col rounded-2xl md:flex-row md:items-center md:justify-between">
@@ -58,10 +60,10 @@ export default async function PerfilPage() {
               {(profile?.display_name as string | null) ?? "Sem nome"}
             </h2>
             <p className="text-label-sm text-primary mt-xs font-mono tracking-widest uppercase">
-              Membro FinLux
+              {t("memberLabel")}
             </p>
             <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-              Conta criada em {memberSince}
+              {t("memberSince")} {memberSince}
             </p>
           </div>
         </div>
@@ -72,17 +74,19 @@ export default async function PerfilPage() {
         <section id="seguranca" className="glass-panel p-md md:p-lg scroll-mt-32 rounded-2xl">
           <div className="mb-md gap-sm flex items-center">
             <ShieldCheck size={20} aria-hidden className="text-primary" />
-            <h3 className="text-headline-md text-on-surface font-sans font-semibold">Segurança</h3>
+            <h3 className="text-headline-md text-on-surface font-sans font-semibold">
+              {t("security")}
+            </h3>
           </div>
           <div className="space-y-md">
             <SettingsRow
-              label="E-mail"
+              label={t("kicker") === "Account" ? "Email" : "E-mail"}
               value={user.email ?? "—"}
               icon={<Mail size={18} aria-hidden />}
             />
             <SettingsRow
-              label="Senha"
-              value="Defina uma nova senha quando quiser"
+              label={t("kicker") === "Account" ? "Password" : "Senha"}
+              value={t("passwordHint")}
               icon={<Key size={18} aria-hidden />}
               actionSlot={<ChangePasswordDialog />}
             />
@@ -94,19 +98,19 @@ export default async function PerfilPage() {
           <div className="mb-md gap-sm flex items-center">
             <Sparkles size={20} aria-hidden className="text-primary" />
             <h3 className="text-headline-md text-on-surface font-sans font-semibold">
-              Preferências
+              {t("preferences")}
             </h3>
           </div>
           <div className="space-y-md">
             <div>
               <p className="text-label-sm text-on-surface-variant mb-sm font-mono uppercase">
-                Idioma
+                {t("language")}
               </p>
               <LanguageSelector />
             </div>
             <div>
               <p className="text-label-sm text-on-surface-variant mb-sm font-mono uppercase">
-                Tema
+                {t("theme")}
               </p>
               <ThemeSelector />
             </div>

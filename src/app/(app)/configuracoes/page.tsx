@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { CategoryChip } from "@/components/categories/CategoryChip";
@@ -12,6 +13,7 @@ export const metadata = {
 export default async function ConfiguracoesPage() {
   const user = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("settings");
 
   const [categories, walletsRes, cardsRes] = await Promise.all([
     fetchCategoriesForUser(supabase, user.id),
@@ -29,30 +31,30 @@ export default async function ConfiguracoesPage() {
     <>
       <header className="mb-lg">
         <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-          Dados
+          {t("kicker")}
         </span>
         <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
-          Configurações
+          {t("title")}
         </h1>
-        <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-          Categorias, contas e cartões. Perfil e segurança ficam no menu do avatar.
-        </p>
+        <p className="text-body-md text-on-surface-variant mt-sm font-sans">{t("subtitle")}</p>
       </header>
 
       <section className="glass-panel p-md md:p-lg mb-lg rounded-2xl">
         <div className="mb-md flex items-center justify-between">
           <div>
-            <h3 className="text-headline-md text-on-surface font-sans font-semibold">Categorias</h3>
+            <h3 className="text-headline-md text-on-surface font-sans font-semibold">
+              {t("categories")}
+            </h3>
             <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-              {categories.filter((c) => c.effectiveActive).length} ativas · toggle para ocultar
+              {t("categoriesHint", {
+                count: categories.filter((c) => c.effectiveActive).length,
+              })}
             </p>
           </div>
           <NewCategoryButton />
         </div>
         {categories.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant font-sans">
-            Nenhuma categoria configurada ainda.
-          </p>
+          <p className="text-body-md text-on-surface-variant font-sans">{t("noCategories")}</p>
         ) : (
           <div className="gap-base grid grid-cols-1 md:grid-cols-2">
             {categories.map((cat) => (
@@ -79,14 +81,15 @@ export default async function ConfiguracoesPage() {
 
       <section className="glass-panel p-md md:p-lg mb-lg rounded-2xl">
         <div className="mb-md">
-          <h3 className="text-headline-md text-on-surface font-sans font-semibold">Contas</h3>
+          <h3 className="text-headline-md text-on-surface font-sans font-semibold">
+            {t("accounts")}
+          </h3>
           <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-            {walletRows.filter((w) => w.is_active).length} ativas · toggle para ocultar (a padrão
-            não pode ser desativada).
+            {t("accountsHint", { count: walletRows.filter((w) => w.is_active).length })}
           </p>
         </div>
         {walletRows.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant font-sans">Sem contas.</p>
+          <p className="text-body-md text-on-surface-variant font-sans">{t("noAccounts")}</p>
         ) : (
           <div className="gap-base grid grid-cols-1 md:grid-cols-2">
             {walletRows.map((w) => (
@@ -97,7 +100,9 @@ export default async function ConfiguracoesPage() {
                 <div>
                   <p className="text-body-md text-on-surface font-sans font-medium">{w.name}</p>
                   {w.is_default ? (
-                    <p className="text-label-sm text-primary font-mono uppercase">Padrão</p>
+                    <p className="text-label-sm text-primary font-mono uppercase">
+                      {t("defaultBadge")}
+                    </p>
                   ) : null}
                 </div>
                 <ActiveToggleRow
@@ -114,13 +119,13 @@ export default async function ConfiguracoesPage() {
 
       <section className="glass-panel p-md md:p-lg mb-lg rounded-2xl">
         <div className="mb-md">
-          <h3 className="text-headline-md text-on-surface font-sans font-semibold">Cartões</h3>
+          <h3 className="text-headline-md text-on-surface font-sans font-semibold">{t("cards")}</h3>
           <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-            {cardRows.filter((c) => c.is_active).length} ativos · toggle para ocultar
+            {t("cardsHint", { count: cardRows.filter((c) => c.is_active).length })}
           </p>
         </div>
         {cardRows.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant font-sans">Sem cartões.</p>
+          <p className="text-body-md text-on-surface-variant font-sans">{t("noCards")}</p>
         ) : (
           <div className="gap-base grid grid-cols-1 md:grid-cols-2">
             {cardRows.map((c) => (

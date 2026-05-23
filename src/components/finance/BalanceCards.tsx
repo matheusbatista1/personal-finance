@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowDownLeft, Landmark } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatBRL } from "@/lib/format";
 
 interface BalanceCardsProps {
@@ -13,6 +16,7 @@ interface BalanceCardsProps {
 }
 
 export function BalanceCards({ available, receivable }: BalanceCardsProps) {
+  const t = useTranslations("dashboard");
   const progressPct = Math.round(Math.min(Math.max(receivable.progress, 0), 1) * 100);
 
   return (
@@ -22,7 +26,7 @@ export function BalanceCards({ available, receivable }: BalanceCardsProps) {
         <div className="z-10 flex items-center justify-between">
           <span className="gap-xs text-label-md text-on-surface-variant flex items-center font-mono">
             <Landmark size={18} aria-hidden />
-            Saldo Disponível
+            {t("availableBalance")}
           </span>
         </div>
         <div className="z-10">
@@ -30,8 +34,9 @@ export function BalanceCards({ available, receivable }: BalanceCardsProps) {
             {formatBRL(available.cents)}
           </div>
           <div className="mt-xs text-label-sm text-secondary font-mono">
-            {available.deltaPct >= 0 ? "+" : ""}
-            {available.deltaPct.toFixed(1)}% vs mês anterior
+            {t("deltaVsLast", {
+              delta: `${available.deltaPct >= 0 ? "+" : ""}${available.deltaPct.toFixed(1)}`,
+            })}
           </div>
         </div>
       </article>
@@ -41,7 +46,7 @@ export function BalanceCards({ available, receivable }: BalanceCardsProps) {
         <div className="z-10 flex items-center justify-between">
           <span className="gap-xs text-label-md text-on-surface-variant flex items-center font-mono">
             <ArrowDownLeft size={18} aria-hidden />
-            Total a Receber
+            {t("totalReceivable")}
           </span>
         </div>
         <div className="z-10">

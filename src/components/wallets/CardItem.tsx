@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Nfc } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function CardItem({
   isActive = false,
   onActivate,
 }: CardItemProps) {
+  const t = useTranslations("wallet");
   const isDarkCard = isDark(color);
   const onSurface = isDarkCard ? "text-white" : "text-on-surface";
   const onMuted = isDarkCard ? "text-white/70" : "text-on-surface-variant";
@@ -55,21 +57,21 @@ export function CardItem({
       <div className="relative z-10 flex items-start justify-between">
         <div>
           <p className={`text-label-sm font-mono tracking-wider uppercase ${onMuted}`}>{name}</p>
-          <p className={`text-body-md mt-1 font-sans ${onSurface}`}>Crédito</p>
+          <p className={`text-body-md mt-1 font-sans ${onSurface}`}>{t("creditLabel")}</p>
         </div>
         <Nfc size={28} className={onSurface} aria-hidden />
       </div>
 
       <div className="relative z-10">
-        <p className={`text-label-md mb-1 font-mono ${onMuted}`}>Limite total</p>
+        <p className={`text-label-md mb-1 font-mono ${onMuted}`}>{t("totalLimit")}</p>
         <p className={`text-headline-md font-sans font-semibold tracking-tight ${onSurface}`}>
           {formatBRL(creditLimitCents)}
         </p>
         <div className="mt-4 flex items-center justify-between">
           <p className={`text-label-sm font-mono ${onMuted}`}>
-            Disponível {formatBRL(availableLimitCents)}
+            {t("availableLimit")} {formatBRL(availableLimitCents)}
           </p>
-          <p className={`text-label-sm font-mono ${onMuted}`}>Vence dia {dueDay}</p>
+          <p className={`text-label-sm font-mono ${onMuted}`}>{t("dueDay", { day: dueDay })}</p>
         </div>
       </div>
     </Link>

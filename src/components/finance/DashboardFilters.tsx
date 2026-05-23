@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ChevronDown, CreditCard, Landmark, Users } from "lucide-react";
 import type { AllContactsRow, SourceOptionRow } from "@/application/dto/MonthlyDashboardDTO";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function DashboardFilters({
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("dashboard");
 
   function updateParam(key: string, value: string | string[] | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -61,7 +63,7 @@ export function DashboardFilters({
               : "text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface",
           )}
         >
-          Visão Geral
+          {t("overview")}
         </button>
         <button
           type="button"
@@ -73,12 +75,12 @@ export function DashboardFilters({
               : "text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface",
           )}
         >
-          Meus Gastos
+          {t("myExpenses")}
         </button>
       </div>
       <div className="bg-outline-variant/20 mx-xs h-4 w-px" />
       <FilterPopover
-        label="Pessoas"
+        label={t("peoplePicker")}
         icon={<Users size={16} aria-hidden />}
         selectedIds={selectedPeopleIds}
         options={contacts.map((c) => ({
@@ -90,14 +92,14 @@ export function DashboardFilters({
         onChange={(ids) => updateParam("people", ids)}
       />
       <FilterPopover
-        label="Cartões"
+        label={t("cardsPicker")}
         icon={<CreditCard size={16} aria-hidden />}
         selectedIds={selectedCardIds}
         options={cards.map((c) => ({ id: c.id, name: c.name }))}
         onChange={(ids) => updateParam("cards", ids)}
       />
       <FilterPopover
-        label="Contas"
+        label={t("walletsPicker")}
         icon={<Landmark size={16} aria-hidden />}
         selectedIds={selectedWalletIds}
         options={wallets.map((w) => ({ id: w.id, name: w.name }))}

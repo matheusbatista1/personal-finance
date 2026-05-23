@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { RecentTransactionRow } from "@/application/dto/MonthlyDashboardDTO";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { formatBRL } from "@/lib/format";
@@ -26,6 +27,7 @@ const participantColor: Record<string, string> = {
 };
 
 export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
+  const t = useTranslations("dashboard");
   const [visible, setVisible] = useState(PAGE_SIZE);
   const visibleRows = rows.slice(0, visible);
   const hasMore = visible < rows.length;
@@ -33,12 +35,12 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
   return (
     <section className="gap-md flex flex-col">
       <h3 className="px-xs text-headline-md text-on-surface font-sans font-semibold">
-        Transações Recentes
+        {t("recentTransactions")}
       </h3>
       <div className="glass-panel flex flex-col overflow-hidden rounded-xl">
         {visibleRows.length === 0 ? (
           <p className="p-md text-body-md text-on-surface-variant font-sans">
-            Nenhuma transação neste mês.
+            {t("noTransactions")}
           </p>
         ) : null}
         {visibleRows.map((row, idx) => (
@@ -108,7 +110,7 @@ export function RecentTransactionsList({ rows }: RecentTransactionsListProps) {
           onClick={() => setVisible((v) => v + PAGE_SIZE)}
           className="px-sm py-xs text-label-md text-primary hover:bg-primary/10 hover:text-on-primary-container cursor-pointer self-center rounded-full font-mono transition-colors"
         >
-          Ver mais ({rows.length - visible} restantes)
+          {t("viewMore", { count: rows.length - visible })}
         </button>
       ) : null}
     </section>

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { CardStack, type CardRow } from "@/components/wallets/CardStack";
@@ -48,6 +49,7 @@ function toNumber(value: number | string): number {
 export default async function CarteiraPage() {
   await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("wallet");
 
   const [walletsRes, cardsRes, banksRes, netFlows, cardUsed] = await Promise.all([
     supabase
@@ -117,14 +119,12 @@ export default async function CarteiraPage() {
       <header className="mb-lg gap-md flex flex-col justify-between md:flex-row md:items-end">
         <div>
           <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-            Patrimônio
+            {t("kicker")}
           </span>
           <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
-            Carteira
+            {t("title")}
           </h1>
-          <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-            Suas contas e cartões em um único lugar.
-          </p>
+          <p className="text-body-md text-on-surface-variant mt-sm font-sans">{t("subtitle")}</p>
         </div>
         <div className="gap-sm flex flex-wrap items-center">
           <AddCardDialog wallets={walletOptions} />
@@ -136,10 +136,10 @@ export default async function CarteiraPage() {
         <section className="gap-md flex flex-col lg:col-span-5">
           <div className="flex items-end justify-between">
             <h2 className="text-headline-md text-on-surface font-sans font-semibold">
-              Minha Carteira
+              {t("myWallet")}
             </h2>
             <span className="text-label-sm text-on-surface-variant font-mono">
-              {cardRows.length} {cardRows.length === 1 ? "cartão" : "cartões"}
+              {cardRows.length}
             </span>
           </div>
           <CardStack cards={cardRows} />

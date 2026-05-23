@@ -2,12 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, X } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
 import { deleteAccount } from "@/actions/profile";
 
 export function DeleteAccountDialog() {
+  const t = useTranslations("profile");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export function DeleteAccountDialog() {
         onClick={() => setOpen(true)}
         className="border-error/50 text-error hover:bg-error/10 px-md py-sm shrink-0 cursor-pointer rounded-full border font-sans font-semibold transition-all"
       >
-        Deletar conta
+        {t("deleteAccount")}
       </button>
       {open && typeof document !== "undefined"
         ? createPortal(
@@ -56,10 +59,10 @@ export function DeleteAccountDialog() {
                     <AlertTriangle size={24} aria-hidden className="text-error mt-1 shrink-0" />
                     <div>
                       <h2 className="text-headline-md text-on-surface font-sans font-semibold">
-                        Deletar conta
+                        {t("deleteAccountTitle")}
                       </h2>
                       <p className="text-label-sm text-on-surface-variant mt-xs font-mono">
-                        Esta ação é irreversível. Todos os seus dados serão removidos.
+                        {t("deleteWarning")}
                       </p>
                     </div>
                   </div>
@@ -79,7 +82,7 @@ export function DeleteAccountDialog() {
                       htmlFor="delete-confirm"
                       className="text-label-sm text-outline mb-xs block font-mono tracking-wider uppercase"
                     >
-                      Digite <span className="text-error">DELETAR</span> para confirmar
+                      {t("confirmDelete")}
                     </label>
                     <Input
                       id="delete-confirm"
@@ -101,14 +104,14 @@ export function DeleteAccountDialog() {
                       disabled={pending}
                       className="text-label-md text-on-surface hover:bg-surface-variant/50 px-lg py-sm cursor-pointer rounded-full font-mono transition-colors disabled:cursor-not-allowed"
                     >
-                      Cancelar
+                      {tCommon("cancel")}
                     </button>
                     <button
                       type="submit"
                       disabled={pending || confirm !== "DELETAR"}
                       className="bg-error text-on-error px-lg py-sm cursor-pointer rounded-full font-sans font-semibold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {pending ? "Excluindo…" : "Excluir conta"}
+                      {pending ? tCommon("deleting") : t("deleteAccount")}
                     </button>
                   </div>
                 </form>

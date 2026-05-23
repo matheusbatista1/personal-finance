@@ -1,5 +1,5 @@
-import { PageLoader } from "@/components/ui/PageLoader";
+import { SplashScreen } from "@/components/layout/SplashScreen";
 
 export default function Loading() {
-  return <PageLoader label="Carregando dashboard" blocks={4} />;
+  return <SplashScreen />;
 }

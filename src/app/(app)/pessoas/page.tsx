@@ -1,4 +1,5 @@
 import { Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { PersonCard } from "@/components/contacts/PersonCard";
@@ -13,6 +14,7 @@ const PALETTE = ["primary", "tertiary", "secondary"] as const;
 export default async function PessoasPage() {
   await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("people");
 
   const [contactsRes, splitsRes] = await Promise.all([
     supabase
@@ -45,20 +47,18 @@ export default async function PessoasPage() {
       <header className="mb-lg gap-md flex flex-col justify-between md:flex-row md:items-end">
         <div>
           <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-            Rede
+            {t("kicker")}
           </span>
           <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
-            Gerenciar Pessoas
+            {t("title")}
           </h1>
-          <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-            Adicione contatos para ratear gastos, registrar empréstimos e acompanhar saldos.
-          </p>
+          <p className="text-body-md text-on-surface-variant mt-sm font-sans">{t("subtitle")}</p>
         </div>
         <AddPersonDialog />
       </header>
 
       {rows.length === 0 ? (
-        <EmptyState />
+        <EmptyState title={t("empty")} copy={t("emptyCopy")} contactLabel={t("contact")} />
       ) : (
         <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((row, idx) => (
@@ -67,7 +67,7 @@ export default async function PessoasPage() {
               contactId={row.id}
               name={row.name}
               initial={row.name.charAt(0).toUpperCase()}
-              role={row.color || "Contato"}
+              role={row.color || t("contact")}
               email={row.email}
               owedToMeCents={receivableByContact.get(row.id) ?? 0}
               iOweCents={0}
@@ -80,22 +80,23 @@ export default async function PessoasPage() {
   );
 }
 
-function EmptyState() {
+function EmptyState({
+  title,
+  copy,
+  contactLabel,
+}: {
+  title: string;
+  copy: string;
+  contactLabel: string;
+}) {
   return (
     <div className="glass-panel p-xl flex flex-col items-center justify-center rounded-2xl text-center">
       <div className="bg-primary-container/20 text-primary mb-md flex h-16 w-16 items-center justify-center rounded-2xl">
         <Users size={28} aria-hidden />
       </div>
-      <h3 className="text-headline-md text-on-surface mb-xs font-sans font-semibold">
-        Você ainda não tem contatos
-      </h3>
-      <p className="text-body-md text-on-surface-variant mb-lg max-w-[28rem] font-sans">
-        Adicione as pessoas com quem você divide gastos — Arthur, Mãe, sócios, amigos — para começar
-        a usar o motor de rateio.
-      </p>
-      <p className="text-label-sm text-on-surface-variant font-mono">
-        Use o botão <span className="text-primary font-semibold">Adicionar Pessoa</span> acima.
-      </p>
+      <h3 className="text-headline-md text-on-surface mb-xs font-sans font-semibold">{title}</h3>
+      <p className="text-body-md text-on-surface-variant mb-lg max-w-[28rem] font-sans">{copy}</p>
+      <p className="text-label-sm text-on-surface-variant font-mono">{contactLabel}</p>
     </div>
   );
 }
