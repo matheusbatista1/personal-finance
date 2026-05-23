@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { FormError } from "@/components/ui/FormError";
+import { Combobox } from "@/components/ui/Combobox";
 import { deleteWallet, updateWallet } from "@/actions/wallets";
 import {
   createWalletSchema,
@@ -40,6 +41,7 @@ export function EditWalletDialog({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateWalletInput, unknown, CreateWalletOutput>({
     resolver: zodResolver(createWalletSchema),
@@ -133,18 +135,23 @@ export function EditWalletDialog({
             >
               Banco
             </label>
-            <select
-              id="wallet-edit-bank"
-              className="bg-surface-container-low border-outline-variant/50 focus:border-primary text-on-surface py-sm px-sm w-full rounded-md border-b font-sans outline-none focus:ring-0"
-              {...register("bankId")}
-            >
-              <option value="">Outros</option>
-              {banks.map((bank) => (
-                <option key={bank.id} value={bank.id}>
-                  {bank.name}
-                </option>
-              ))}
-            </select>
+            <Controller
+              control={control}
+              name="bankId"
+              render={({ field }) => (
+                <Combobox
+                  id="wallet-edit-bank"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Outros"
+                  searchPlaceholder="Buscar banco…"
+                  options={[
+                    { value: "", label: "Outros" },
+                    ...banks.map((b) => ({ value: b.id, label: b.name, hint: b.shortName })),
+                  ]}
+                />
+              )}
+            />
             <FormError>{errors.bankId?.message}</FormError>
           </div>
 

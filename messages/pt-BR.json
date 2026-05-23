@@ -1,0 +1,82 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "loading": "Carregando",
+    "or": "ou",
+    "search": "Buscar",
+    "clear": "Limpar",
+    "yes": "Sim",
+    "no": "Não",
+    "saving": "Salvando…",
+    "deleting": "Excluindo…",
+    "remove": "Remover"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "wallet": "Carteira",
+    "transactions": "Transações",
+    "reports": "Relatórios",
+    "people": "Pessoas",
+    "settings": "Configurações",
+    "profile": "Perfil",
+    "signOut": "Sair",
+    "newTransaction": "Novo lançamento"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Criar conta",
+    "signInWithGoogle": "Entrar com Google",
+    "signUpWithGoogle": "Criar conta com Google",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgotPassword": "Esqueci a senha",
+    "alreadyHaveAccount": "Já tenho conta",
+    "createAccount": "Criar conta",
+    "displayName": "Nome",
+    "displayNameOptional": "Nome (opcional)",
+    "displayNamePlaceholder": "Como podemos te chamar?",
+    "signingIn": "Entrando…",
+    "creatingAccount": "Criando conta…",
+    "termsCopy": "Ao continuar, você concorda com os Termos de Uso e Política de Privacidade.",
+    "tagline": "Digital Luxury Finance"
+  },
+  "profile": {
+    "title": "Perfil",
+    "subtitle": "Sua identidade, segurança e preferências.",
+    "memberSince": "Conta criada em",
+    "memberLabel": "Membro FinLux",
+    "security": "Segurança",
+    "preferences": "Preferências",
+    "language": "Idioma",
+    "theme": "Tema",
+    "changeAvatar": "Trocar foto",
+    "dangerZone": "Zona perigosa",
+    "dangerCopy": "Após deletar a conta, todos os dados são removidos permanentemente. Não há como voltar atrás.",
+    "deleteAccount": "Deletar conta",
+    "confirmDelete": "Digite DELETAR para confirmar",
+    "deleteWarning": "Esta ação é irreversível. Todos os seus dados serão removidos."
+  },
+  "settings": {
+    "title": "Configurações",
+    "subtitle": "Categorias, contas e cartões. Perfil e segurança ficam no menu do avatar.",
+    "categories": "Categorias",
+    "accounts": "Contas",
+    "cards": "Cartões"
+  },
+  "dashboard": {
+    "overview": "Visão Geral",
+    "myExpenses": "Meus Gastos",
+    "monthlyTotal": "Gasto Total do Mês",
+    "monthlyTotalMine": "Gasto Total do Mês (EU)",
+    "availableBalance": "Saldo Disponível",
+    "totalReceivable": "Total a Receber",
+    "recentTransactions": "Transações Recentes",
+    "viewMore": "Ver mais",
+    "splitResumes": "Resumo de Rateios"
+  }
+}

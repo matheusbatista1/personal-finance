@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/infrastructure/database/supabase/server";
+import { createAdminClient } from "@/infrastructure/database/supabase/admin";
 import { requireUser } from "@/lib/auth";
 import {
   updatePasswordSchema,
@@ -81,6 +83,27 @@ export async function uploadAvatar(formData: FormData): Promise<AvatarResult> {
   revalidatePath("/perfil");
   revalidatePath("/", "layout");
   return { ok: true, avatarUrl: publicUrl };
+}
+
+export async function deleteAccount(input: { confirm: string }): Promise<ActionResult> {
+  if (input.confirm !== "DELETAR") {
+    return { ok: false, error: "Digite DELETAR para confirmar." };
+  }
+
+  const user = await requireUser();
+  const supabase = await createClient();
+  const admin = createAdminClient();
+
+  // Cascades: profile, wallets, cards, transactions, splits etc. are FK-cascaded
+  // off auth.users via `on delete cascade` in the schema.
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    return { ok: false, error: "Não foi possível excluir a conta." };
+  }
+
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/login?deleted=1");
 }
 
 export async function removeAvatar(): Promise<AvatarResult> {

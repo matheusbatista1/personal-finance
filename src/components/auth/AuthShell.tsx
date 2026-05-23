@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/ui/Logo";
 
 type Mode = "signin" | "signup";
@@ -8,21 +9,11 @@ interface AuthShellProps {
   children: React.ReactNode;
 }
 
-const copy = {
-  signin: {
-    title: "Entrar",
-    toggleLabel: "Criar conta",
-    toggleHref: "/signup",
-  },
-  signup: {
-    title: "Criar conta",
-    toggleLabel: "Já tenho conta",
-    toggleHref: "/login",
-  },
-} as const;
-
-export function AuthShell({ mode, children }: AuthShellProps) {
-  const { title, toggleLabel, toggleHref } = copy[mode];
+export async function AuthShell({ mode, children }: AuthShellProps) {
+  const t = await getTranslations("auth");
+  const title = mode === "signin" ? t("signIn") : t("signUp");
+  const toggleLabel = mode === "signin" ? t("signUp") : t("alreadyHaveAccount");
+  const toggleHref = mode === "signin" ? "/signup" : "/login";
 
   return (
     <div
@@ -35,7 +26,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
           FinLux
         </h1>
         <p className="text-label-sm text-on-surface-variant font-mono tracking-widest uppercase">
-          Digital Luxury Finance
+          {t("tagline")}
         </p>
       </div>
 

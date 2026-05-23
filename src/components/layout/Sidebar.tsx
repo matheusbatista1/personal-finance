@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   BarChart3,
   LayoutDashboard,
@@ -18,20 +19,22 @@ import { signOut } from "@/actions/auth";
 
 interface NavItem {
   href: string;
-  label: string;
+  key: "dashboard" | "wallet" | "transactions" | "reports" | "people";
   icon: LucideIcon;
 }
 
 const items: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/carteira", label: "Carteira", icon: Wallet },
-  { href: "/transacoes", label: "Transações", icon: Receipt },
-  { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
-  { href: "/pessoas", label: "Pessoas", icon: Users },
+  { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/carteira", key: "wallet", icon: Wallet },
+  { href: "/transacoes", key: "transactions", icon: Receipt },
+  { href: "/relatorios", key: "reports", icon: BarChart3 },
+  { href: "/pessoas", key: "people", icon: Users },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const tNav = useTranslations("nav");
+  const tAuth = useTranslations("auth");
 
   return (
     <nav className="border-outline-variant/20 bg-surface/80 fixed top-0 left-0 z-50 hidden h-screen w-64 flex-col border-r shadow-2xl backdrop-blur-2xl md:flex">
@@ -42,7 +45,7 @@ export function Sidebar() {
           <h2 className="mt-sm text-headline-md text-primary font-sans font-semibold tracking-tight">
             FinLux
           </h2>
-          <p className="text-label-sm text-on-surface-variant font-mono">Digital Luxury Finance</p>
+          <p className="text-label-sm text-on-surface-variant font-mono">{tAuth("tagline")}</p>
         </div>
 
         <div className="gap-sm flex flex-1 flex-col">
@@ -62,7 +65,7 @@ export function Sidebar() {
                 )}
               >
                 <Icon size={20} strokeWidth={active ? 2.4 : 2} aria-hidden />
-                <span className="text-body-md">{item.label}</span>
+                <span className="text-body-md">{tNav(item.key)}</span>
               </Link>
             );
           })}
@@ -74,7 +77,7 @@ export function Sidebar() {
             className="gap-sm px-sm py-sm text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface flex scale-95 items-center rounded-lg transition-all duration-300 active:scale-90"
           >
             <Settings size={20} aria-hidden />
-            <span className="text-body-md">Configurações</span>
+            <span className="text-body-md">{tNav("settings")}</span>
           </Link>
           <form action={signOut}>
             <button
@@ -82,7 +85,7 @@ export function Sidebar() {
               className="gap-sm px-sm py-sm text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface flex w-full scale-95 items-center rounded-lg text-left transition-all duration-300 active:scale-90"
             >
               <LogOut size={20} aria-hidden />
-              <span className="text-body-md">Sair</span>
+              <span className="text-body-md">{tNav("signOut")}</span>
             </button>
           </form>
         </div>

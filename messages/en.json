@@ -1,0 +1,82 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading",
+    "or": "or",
+    "search": "Search",
+    "clear": "Clear",
+    "yes": "Yes",
+    "no": "No",
+    "saving": "Saving…",
+    "deleting": "Deleting…",
+    "remove": "Remove"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "wallet": "Wallet",
+    "transactions": "Transactions",
+    "reports": "Reports",
+    "people": "People",
+    "settings": "Settings",
+    "profile": "Profile",
+    "signOut": "Sign out",
+    "newTransaction": "New transaction"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signInWithGoogle": "Sign in with Google",
+    "signUpWithGoogle": "Sign up with Google",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password",
+    "alreadyHaveAccount": "I have an account",
+    "createAccount": "Create account",
+    "displayName": "Name",
+    "displayNameOptional": "Name (optional)",
+    "displayNamePlaceholder": "What should we call you?",
+    "signingIn": "Signing in…",
+    "creatingAccount": "Creating account…",
+    "termsCopy": "By continuing, you agree to the Terms of Use and Privacy Policy.",
+    "tagline": "Digital Luxury Finance"
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Your identity, security and preferences.",
+    "memberSince": "Member since",
+    "memberLabel": "FinLux member",
+    "security": "Security",
+    "preferences": "Preferences",
+    "language": "Language",
+    "theme": "Theme",
+    "changeAvatar": "Change photo",
+    "dangerZone": "Danger zone",
+    "dangerCopy": "Deleting your account permanently removes all your data. This cannot be undone.",
+    "deleteAccount": "Delete account",
+    "confirmDelete": "Type DELETAR to confirm",
+    "deleteWarning": "This action is irreversible. All your data will be removed."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Categories, accounts and cards. Profile and security live in the avatar menu.",
+    "categories": "Categories",
+    "accounts": "Accounts",
+    "cards": "Cards"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "myExpenses": "My Expenses",
+    "monthlyTotal": "Monthly Total",
+    "monthlyTotalMine": "Monthly Total (ME)",
+    "availableBalance": "Available Balance",
+    "totalReceivable": "Total Receivable",
+    "recentTransactions": "Recent Transactions",
+    "viewMore": "View more",
+    "splitResumes": "Split Summaries"
+  }
+}

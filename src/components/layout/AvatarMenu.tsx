@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { LogOut, UserRound } from "lucide-react";
 import { signOut } from "@/actions/auth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -15,6 +16,8 @@ interface Props {
 export function AvatarMenu({ initial, avatarUrl, displayName = "Usuário" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const tNav = useTranslations("nav");
+  const tProfile = useTranslations("profile");
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +52,7 @@ export function AvatarMenu({ initial, avatarUrl, displayName = "Usuário" }: Pro
             className="gap-sm px-md py-sm text-body-md text-on-surface hover:bg-primary-container/20 hover:text-primary flex cursor-pointer items-center font-sans transition-colors"
           >
             <UserRound size={16} aria-hidden />
-            Editar perfil
+            {tProfile("title")}
           </Link>
           <div className="border-outline-variant/20 mx-md my-1 border-t" />
           <form action={signOut}>
@@ -59,7 +62,7 @@ export function AvatarMenu({ initial, avatarUrl, displayName = "Usuário" }: Pro
               className="gap-sm px-md py-sm text-body-md text-error hover:bg-error/10 flex w-full cursor-pointer items-center font-sans transition-colors"
             >
               <LogOut size={16} aria-hidden />
-              Sair
+              {tNav("signOut")}
             </button>
           </form>
         </div>

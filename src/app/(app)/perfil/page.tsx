@@ -7,6 +7,7 @@ import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { ChangePasswordDialog } from "@/components/settings/ChangePasswordDialog";
 import { TwoFactorPanel } from "@/components/settings/TwoFactorPanel";
 import { AvatarUploader } from "@/components/settings/AvatarUploader";
+import { LanguageSelector } from "@/components/settings/LanguageSelector";
 
 export const metadata = {
   title: "Perfil — FinLux",
@@ -97,7 +98,12 @@ export default async function PerfilPage() {
             </h3>
           </div>
           <div className="space-y-md">
-            <SettingsRow label="Idioma" value="Português (BR)" actionDisabled />
+            <div>
+              <p className="text-label-sm text-on-surface-variant mb-sm font-mono uppercase">
+                Idioma
+              </p>
+              <LanguageSelector />
+            </div>
             <div>
               <p className="text-label-sm text-on-surface-variant mb-sm font-mono uppercase">
                 Tema

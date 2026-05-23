@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 
 export function DangerZone() {
   return (
@@ -15,14 +16,7 @@ export function DangerZone() {
           </p>
         </div>
       </div>
-      <button
-        type="button"
-        disabled
-        title="Em breve"
-        className="border-error/50 text-error hover:bg-error/10 px-md py-sm shrink-0 rounded-full border font-sans font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        Deletar conta
-      </button>
+      <DeleteAccountDialog />
     </section>
   );
 }
