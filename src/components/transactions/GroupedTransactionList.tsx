@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Receipt } from "lucide-react";
+import { CreditCard, Landmark, Receipt } from "lucide-react";
 import { TransactionIcon } from "@/components/finance/TransactionIcon";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,8 @@ export interface GroupedTxRow {
   amountCents: number;
   userShareCents: number;
   hasSplit: boolean;
+  sourceKind: "wallet" | "card";
+  sourceId: string;
   sourceLabel: string;
   participantInitials: string[];
   installmentNumber: number;
@@ -22,6 +24,7 @@ export interface GroupedTxRow {
 
 interface Props {
   rows: GroupedTxRow[];
+  groupBy?: "date" | "source";
 }
 
 interface DayGroup {
@@ -59,7 +62,41 @@ function groupByDay(rows: GroupedTxRow[]): DayGroup[] {
   return [...map.values()];
 }
 
-export function GroupedTransactionList({ rows }: Props) {
+interface SourceGroup {
+  key: string;
+  kind: "wallet" | "card";
+  label: string;
+  totalCents: number;
+  rows: GroupedTxRow[];
+}
+
+function groupBySource(rows: GroupedTxRow[]): SourceGroup[] {
+  const map = new Map<string, SourceGroup>();
+  for (const r of rows) {
+    const key = `${r.sourceKind}:${r.sourceId}`;
+    let group = map.get(key);
+    if (!group) {
+      group = {
+        key,
+        kind: r.sourceKind,
+        label: r.sourceLabel,
+        totalCents: 0,
+        rows: [],
+      };
+      map.set(key, group);
+    }
+    group.rows.push(r);
+    if (r.type === "expense") group.totalCents += r.amountCents;
+    else group.totalCents -= r.amountCents;
+  }
+  // Cards first (typically what user wants to see), then wallets; alphabetic within each.
+  return [...map.values()].sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === "card" ? -1 : 1;
+    return a.label.localeCompare(b.label, "pt-BR");
+  });
+}
+
+export function GroupedTransactionList({ rows, groupBy = "date" }: Props) {
   if (rows.length === 0) {
     return (
       <div className="glass-panel p-lg gap-sm flex flex-col items-center justify-center rounded-2xl text-center">
@@ -76,6 +113,47 @@ export function GroupedTransactionList({ rows }: Props) {
     );
   }
 
+  if (groupBy === "source") {
+    const sourceGroups = groupBySource(rows);
+    return (
+      <div className="gap-md flex flex-col">
+        {sourceGroups.map((g) => (
+          <section
+            key={g.key}
+            className="glass-panel border-outline-variant/10 overflow-hidden rounded-2xl border"
+          >
+            <header className="bg-surface-container-low/60 p-md border-outline-variant/10 gap-md flex items-center justify-between border-b">
+              <div className="gap-sm flex items-center">
+                <div className="bg-primary-container/20 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
+                  {g.kind === "card" ? (
+                    <CreditCard size={18} aria-hidden />
+                  ) : (
+                    <Landmark size={18} aria-hidden />
+                  )}
+                </div>
+                <div>
+                  <p className="text-body-lg text-on-surface font-sans font-semibold">{g.label}</p>
+                  <p className="text-label-sm text-on-surface-variant font-mono">
+                    {g.rows.length} {g.rows.length === 1 ? "transação" : "transações"} ·{" "}
+                    {g.kind === "card" ? "Cartão" : "Conta"}
+                  </p>
+                </div>
+              </div>
+              <p className="text-headline-md text-on-surface font-sans font-semibold">
+                {formatBRL(g.totalCents)}
+              </p>
+            </header>
+            <div className="divide-outline-variant/10 flex flex-col divide-y">
+              {g.rows.map((row) => (
+                <TxRow key={row.id} row={row} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
   const groups = groupByDay(rows);
 
   return (
@@ -86,68 +164,73 @@ export function GroupedTransactionList({ rows }: Props) {
             {g.label}
           </h3>
           {g.rows.map((row) => (
-            <Link
-              key={row.id}
-              href={`/gastos/${row.id}/editar`}
-              className="glass-panel p-md hover:bg-surface-variant/20 focus-visible:ring-primary/50 group flex cursor-pointer items-center justify-between rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <div className="gap-md flex items-center">
-                <div className="bg-surface-container border-outline-variant/20 group-hover:border-primary/30 flex h-12 w-12 items-center justify-center rounded-full border transition-colors">
-                  <TransactionIcon name={row.iconName} className="text-primary" />
-                </div>
-                <div>
-                  <h4 className="text-body-lg text-on-surface font-sans font-medium">
-                    {row.description}
-                    {row.installmentTotal > 1 ? (
-                      <span className="text-label-sm text-on-surface-variant ml-2 font-mono">
-                        {row.installmentNumber}/{row.installmentTotal}
-                      </span>
-                    ) : null}
-                  </h4>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-label-sm text-on-surface-variant font-mono">
-                      {row.timeLabel}
-                    </span>
-                    <span className="bg-surface-variant text-on-surface-variant border-outline-variant/20 rounded border px-2 py-0.5 font-mono text-[10px] tracking-wider uppercase">
-                      {row.sourceLabel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="gap-lg flex items-center">
-                {row.participantInitials.length > 0 ? (
-                  <div className="hidden -space-x-2 md:flex">
-                    {row.participantInitials.slice(0, 3).map((initial, i) => (
-                      <span
-                        key={`${row.id}-${initial}-${i}`}
-                        className="bg-surface-bright border-surface flex h-7 w-7 items-center justify-center rounded-full border-2 text-[10px] font-bold"
-                      >
-                        {initial}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-                <div className="text-right">
-                  <p
-                    className={cn(
-                      "text-body-lg font-sans font-medium",
-                      row.type === "income" ? "text-tertiary" : "text-on-surface",
-                    )}
-                  >
-                    {row.type === "income" ? "+" : "-"}
-                    {formatBRL(row.amountCents)}
-                  </p>
-                  {row.hasSplit && row.type === "expense" ? (
-                    <p className="text-label-sm text-primary font-mono">
-                      Sua parte: {formatBRL(row.userShareCents)}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </Link>
+            <div key={row.id} className="glass-panel overflow-hidden rounded-xl">
+              <TxRow row={row} />
+            </div>
           ))}
         </section>
       ))}
     </div>
+  );
+}
+
+function TxRow({ row }: { row: GroupedTxRow }) {
+  return (
+    <Link
+      href={`/gastos/${row.id}/editar`}
+      className="p-md hover:bg-surface-variant/20 focus-visible:ring-primary/50 group flex cursor-pointer items-center justify-between transition-colors focus-visible:ring-2 focus-visible:outline-none"
+    >
+      <div className="gap-md flex items-center">
+        <div className="bg-surface-container border-outline-variant/20 group-hover:border-primary/30 flex h-12 w-12 items-center justify-center rounded-full border transition-colors">
+          <TransactionIcon name={row.iconName} className="text-primary" />
+        </div>
+        <div>
+          <h4 className="text-body-lg text-on-surface font-sans font-medium">
+            {row.description}
+            {row.installmentTotal > 1 ? (
+              <span className="text-label-sm text-on-surface-variant ml-2 font-mono">
+                {row.installmentNumber}/{row.installmentTotal}
+              </span>
+            ) : null}
+          </h4>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-label-sm text-on-surface-variant font-mono">{row.timeLabel}</span>
+            <span className="bg-surface-variant text-on-surface-variant border-outline-variant/20 rounded border px-2 py-0.5 font-mono text-[10px] tracking-wider uppercase">
+              {row.sourceLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="gap-lg flex items-center">
+        {row.participantInitials.length > 0 ? (
+          <div className="hidden -space-x-2 md:flex">
+            {row.participantInitials.slice(0, 3).map((initial, i) => (
+              <span
+                key={`${row.id}-${initial}-${i}`}
+                className="bg-surface-bright border-surface flex h-7 w-7 items-center justify-center rounded-full border-2 text-[10px] font-bold"
+              >
+                {initial}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <div className="text-right">
+          <p
+            className={cn(
+              "text-body-lg font-sans font-medium",
+              row.type === "income" ? "text-tertiary" : "text-on-surface",
+            )}
+          >
+            {row.type === "income" ? "+" : "-"}
+            {formatBRL(row.amountCents)}
+          </p>
+          {row.hasSplit && row.type === "expense" ? (
+            <p className="text-label-sm text-primary font-mono">
+              Sua parte: {formatBRL(row.userShareCents)}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </Link>
   );
 }

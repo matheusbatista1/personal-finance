@@ -323,8 +323,8 @@ button:disabled,
 .wallet-stack .wallet-card {
   position: relative;
   transition:
-    transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    box-shadow 0.4s ease;
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.6s ease;
   transform-style: preserve-3d;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   cursor: pointer;
@@ -335,23 +335,22 @@ button:disabled,
   margin-top: -160px;
 }
 
-.wallet-stack .wallet-card:hover,
-.wallet-stack .wallet-card:focus-visible {
-  transform: translateY(-140px) translateZ(40px);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+.wallet-stack .wallet-card--active {
+  transform: translateY(-110px) translateZ(30px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
   z-index: 50;
   outline: none;
 }
 
-/* Prevent hover cascade: when one card is hovered, others ignore the mouse
-   so the visual lift doesn't accidentally land the cursor on a neighbor. */
-.wallet-stack:has(.wallet-card:hover) .wallet-card:not(:hover) {
+/* While one card is active, the others ignore pointer events so the rising
+   animation doesn't accidentally drop the cursor onto a neighbour. */
+.wallet-stack .wallet-card--dimmed {
   pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .wallet-stack .wallet-card,
-  .wallet-stack .wallet-card:hover {
+  .wallet-stack .wallet-card--active {
     transition: none;
     transform: none;
   }

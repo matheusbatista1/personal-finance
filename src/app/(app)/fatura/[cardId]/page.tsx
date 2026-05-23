@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
 import { InvoiceHeader } from "@/components/invoices/InvoiceHeader";
@@ -77,7 +79,7 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
 
   const supabase = await createClient();
 
-  const [{ data: cardData }, { data: walletsData }] = await Promise.all([
+  const [{ data: cardData }, { data: walletsData }, { data: allCardsData }] = await Promise.all([
     supabase
       .from("cards")
       .select("id, name, color, credit_limit_cents, closing_day, due_day, wallet_id")
@@ -88,10 +90,22 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
       .select("id, name, is_default")
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true }),
+    supabase
+      .from("cards")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true }),
   ]);
 
   const card = cardData as CardRow | null;
   if (!card) notFound();
+
+  const allCards = (allCardsData ?? []) as Array<{ id: string; name: string }>;
+  const currentIdx = allCards.findIndex((c) => c.id === cardId);
+  const prevCard = currentIdx > 0 ? (allCards[currentIdx - 1] ?? null) : null;
+  const nextCard =
+    currentIdx >= 0 && currentIdx < allCards.length - 1 ? (allCards[currentIdx + 1] ?? null) : null;
+  const competenceQuery = m ? `?m=${m}` : "";
 
   const walletOptions: WalletOption[] = (
     (walletsData ?? []) as Array<{ id: string; name: string; is_default: boolean }>
@@ -145,16 +159,46 @@ export default async function InvoicePage({ params, searchParams }: InvoicePageP
   return (
     <>
       <header className="mb-lg gap-md flex flex-col justify-between md:flex-row md:items-end">
-        <div>
-          <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
-            Fatura · {formatReferenceLong(year, month)}
-          </span>
-          <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
-            {card.name}
-          </h1>
-          <p className="text-body-md text-on-surface-variant mt-sm font-sans">
-            Transações lançadas neste cartão dentro do mês de referência.
-          </p>
+        <div className="gap-sm flex items-start">
+          {prevCard ? (
+            <Link
+              href={`/fatura/${prevCard.id}${competenceQuery}`}
+              aria-label={`Cartão anterior: ${prevCard.name}`}
+              title={prevCard.name}
+              className="text-on-surface-variant hover:text-primary hover:bg-primary-container/20 border-outline-variant/20 mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors"
+            >
+              <ChevronLeft size={20} aria-hidden />
+            </Link>
+          ) : (
+            <span className="border-outline-variant/10 text-outline-variant/30 mt-1 flex h-10 w-10 items-center justify-center rounded-full border">
+              <ChevronLeft size={20} aria-hidden />
+            </span>
+          )}
+          <div>
+            <span className="text-label-sm text-primary mb-2 block font-mono tracking-[0.2em] uppercase">
+              Fatura · {formatReferenceLong(year, month)}
+            </span>
+            <h1 className="text-display-lg text-on-surface font-sans leading-none font-bold">
+              {card.name}
+            </h1>
+            <p className="text-body-md text-on-surface-variant mt-sm font-sans">
+              {currentIdx + 1} de {allCards.length} · transações deste cartão no mês.
+            </p>
+          </div>
+          {nextCard ? (
+            <Link
+              href={`/fatura/${nextCard.id}${competenceQuery}`}
+              aria-label={`Próximo cartão: ${nextCard.name}`}
+              title={nextCard.name}
+              className="text-on-surface-variant hover:text-primary hover:bg-primary-container/20 border-outline-variant/20 mt-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors"
+            >
+              <ChevronRight size={20} aria-hidden />
+            </Link>
+          ) : (
+            <span className="border-outline-variant/10 text-outline-variant/30 mt-1 flex h-10 w-10 items-center justify-center rounded-full border">
+              <ChevronRight size={20} aria-hidden />
+            </span>
+          )}
         </div>
         <EditCardDialog
           cardId={card.id}

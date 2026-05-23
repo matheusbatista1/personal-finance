@@ -23,10 +23,12 @@ interface PageProps {
   searchParams: Promise<{
     m?: string;
     q?: string;
+    me?: string;
     people?: string;
     cards?: string;
     wallets?: string;
     cats?: string;
+    group?: string;
   }>;
 }
 
@@ -72,10 +74,12 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const { year, month } = resolveCompetence(params.m);
   const q = (params.q ?? "").trim();
+  const includeMe = params.me === "1";
   const selectedPeople = parseMulti(params.people);
   const selectedCards = parseMulti(params.cards);
   const selectedWallets = parseMulti(params.wallets);
   const selectedCats = parseMulti(params.cats);
+  const groupBy: "date" | "source" = params.group === "source" ? "source" : "date";
   const competence = `${year}-${String(month).padStart(2, "0")}`;
   const window = computeBillingWindow(year, month);
 
@@ -125,14 +129,20 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
   const { data } = await query;
   const allTx = ((data ?? []) as unknown as TransactionRow[]) ?? [];
 
-  // Filter by people (any split contact must match).
+  // Filter by people / "Eu" — if either is selected, keep transactions matching ANY
+  // of the chosen identities. Eu = transação onde o usuário tem participação real
+  // (user_share > 0) ou é uma receita.
   const peopleSet = new Set(selectedPeople);
-  const transactions =
-    selectedPeople.length === 0
-      ? allTx
-      : allTx.filter((tx) =>
-          (tx.transaction_splits ?? []).some((s) => peopleSet.has(s.contact_id)),
-        );
+  const hasAnyIdentityFilter = includeMe || selectedPeople.length > 0;
+  const transactions = !hasAnyIdentityFilter
+    ? allTx
+    : allTx.filter((tx) => {
+        const peopleHit =
+          selectedPeople.length > 0 &&
+          (tx.transaction_splits ?? []).some((s) => peopleSet.has(s.contact_id));
+        const meHit = includeMe && (tx.type === "income" || Number(tx.user_share_cents) > 0);
+        return peopleHit || meHit;
+      });
 
   function toNumber(v: number | string) {
     return typeof v === "number" ? v : Number(v);
@@ -141,7 +151,10 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
   const contactsById = new Map(contacts.map((c) => [c.id, c]));
 
   const rows: GroupedTxRow[] = transactions.map((tx) => {
-    const sourceLabel = tx.card_id ? (tx.cards?.name ?? "Cartão") : (tx.wallets?.name ?? "Conta");
+    const sourceKind: "wallet" | "card" = tx.card_id ? "card" : "wallet";
+    const sourceId = (tx.card_id ?? tx.wallet_id ?? "") as string;
+    const sourceLabel =
+      sourceKind === "card" ? (tx.cards?.name ?? "Cartão") : (tx.wallets?.name ?? "Conta");
     const participantInitials: string[] = ["Eu"];
     for (const s of tx.transaction_splits ?? []) {
       const initial = contactsById.get(s.contact_id)?.initial ?? "?";
@@ -160,6 +173,8 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
       amountCents: toNumber(tx.amount_cents),
       userShareCents: toNumber(tx.user_share_cents),
       hasSplit: tx.split_mode !== "none",
+      sourceKind,
+      sourceId,
       sourceLabel,
       participantInitials,
       installmentNumber: tx.installment_number ?? 1,
@@ -192,10 +207,12 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
         <TransactionExplorerSidebar
           competence={competence}
           q={q}
+          includeMe={includeMe}
           selectedPeopleIds={selectedPeople}
           selectedCardIds={selectedCards}
           selectedWalletIds={selectedWallets}
           selectedCategoryIds={selectedCats}
+          groupBy={groupBy}
           contacts={contacts}
           cards={cards}
           wallets={wallets}
@@ -221,7 +238,7 @@ export default async function TransacoesPage({ searchParams }: PageProps) {
           />
         </header>
 
-        <GroupedTransactionList rows={rows} />
+        <GroupedTransactionList rows={rows} groupBy={groupBy} />
       </section>
     </div>
   );

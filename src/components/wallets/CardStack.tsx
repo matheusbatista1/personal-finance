@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { CardItem } from "@/components/wallets/CardItem";
 
@@ -15,6 +18,8 @@ interface CardStackProps {
 }
 
 export function CardStack({ cards }: CardStackProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
   if (cards.length === 0) {
     return (
       <div className="glass-panel p-lg flex h-[260px] flex-col items-center justify-center rounded-2xl text-center">
@@ -32,7 +37,7 @@ export function CardStack({ cards }: CardStackProps) {
   }
 
   return (
-    <div className="wallet-stack pt-sm relative pb-[200px]">
+    <div className="wallet-stack pt-sm relative pb-[200px]" onMouseLeave={() => setActiveId(null)}>
       {cards.map((card) => (
         <CardItem
           key={card.id}
@@ -42,6 +47,9 @@ export function CardStack({ cards }: CardStackProps) {
           creditLimitCents={card.creditLimitCents}
           availableLimitCents={card.availableLimitCents}
           dueDay={card.dueDay}
+          isActive={activeId === card.id}
+          anyActive={activeId !== null}
+          onActivate={() => setActiveId(card.id)}
         />
       ))}
     </div>

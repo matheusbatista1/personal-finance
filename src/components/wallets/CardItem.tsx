@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Nfc } from "lucide-react";
 import { formatBRL } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface CardItemProps {
   id: string;
@@ -9,6 +12,9 @@ interface CardItemProps {
   creditLimitCents: number;
   availableLimitCents: number;
   dueDay: number;
+  isActive?: boolean;
+  anyActive?: boolean;
+  onActivate?: () => void;
 }
 
 export function CardItem({
@@ -18,6 +24,9 @@ export function CardItem({
   creditLimitCents,
   availableLimitCents,
   dueDay,
+  isActive = false,
+  anyActive = false,
+  onActivate,
 }: CardItemProps) {
   const isDarkCard = isDark(color);
   const onSurface = isDarkCard ? "text-white" : "text-on-surface";
@@ -29,7 +38,13 @@ export function CardItem({
     <Link
       href={`/fatura/${id}`}
       aria-label={`Abrir fatura de ${name}`}
-      className="wallet-card p-md focus-visible:ring-primary/50 relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10 focus-visible:ring-2 focus-visible:outline-none"
+      onMouseEnter={onActivate}
+      onFocus={onActivate}
+      className={cn(
+        "wallet-card p-md focus-visible:ring-primary/50 relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10 focus-visible:ring-2 focus-visible:outline-none",
+        isActive && "wallet-card--active",
+        anyActive && !isActive && "wallet-card--dimmed",
+      )}
       style={{ background }}
     >
       <div

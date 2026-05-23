@@ -24,10 +24,12 @@ export interface SidebarCategoryOption extends SidebarOption {
 interface Props {
   competence: string;
   q: string;
+  includeMe: boolean;
   selectedPeopleIds: string[];
   selectedCardIds: string[];
   selectedWalletIds: string[];
   selectedCategoryIds: string[];
+  groupBy: "date" | "source";
   contacts: SidebarContact[];
   cards: SidebarOption[];
   wallets: SidebarOption[];
@@ -37,10 +39,12 @@ interface Props {
 export function TransactionExplorerSidebar({
   competence,
   q,
+  includeMe,
   selectedPeopleIds,
   selectedCardIds,
   selectedWalletIds,
   selectedCategoryIds,
+  groupBy,
   contacts,
   cards,
   wallets,
@@ -91,8 +95,23 @@ export function TransactionExplorerSidebar({
     });
   }
 
+  function toggleMe() {
+    const next = new URLSearchParams(searchParams.toString());
+    if (includeMe) next.delete("me");
+    else next.set("me", "1");
+    navigate(next);
+  }
+
+  function setGrouping(value: "date" | "source") {
+    const next = new URLSearchParams(searchParams.toString());
+    if (value === "date") next.delete("group");
+    else next.set("group", value);
+    navigate(next);
+  }
+
   const hasAnyFilter =
     q.length > 0 ||
+    includeMe ||
     selectedPeopleIds.length > 0 ||
     selectedCardIds.length > 0 ||
     selectedWalletIds.length > 0 ||
@@ -131,9 +150,54 @@ export function TransactionExplorerSidebar({
         </div>
 
         <h3 className="text-label-sm text-on-surface-variant mt-md mb-sm font-mono uppercase">
+          Agrupar por
+        </h3>
+        <div className="gap-xs flex">
+          <button
+            type="button"
+            onClick={() => setGrouping("date")}
+            className={cn(
+              "text-label-sm flex-1 cursor-pointer rounded-full border px-3 py-1.5 font-mono transition-all",
+              groupBy === "date"
+                ? "bg-primary/15 border-primary/50 text-primary"
+                : "bg-surface-container border-outline-variant/30 text-on-surface hover:bg-surface-variant/50",
+            )}
+          >
+            Data
+          </button>
+          <button
+            type="button"
+            onClick={() => setGrouping("source")}
+            className={cn(
+              "text-label-sm flex-1 cursor-pointer rounded-full border px-3 py-1.5 font-mono transition-all",
+              groupBy === "source"
+                ? "bg-primary/15 border-primary/50 text-primary"
+                : "bg-surface-container border-outline-variant/30 text-on-surface hover:bg-surface-variant/50",
+            )}
+          >
+            Origem
+          </button>
+        </div>
+
+        <h3 className="text-label-sm text-on-surface-variant mt-md mb-sm font-mono uppercase">
           Pessoas
         </h3>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={toggleMe}
+            className={cn(
+              "flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+              includeMe
+                ? "bg-primary/15 border-primary/50 text-primary"
+                : "bg-surface-container border-outline-variant/30 text-on-surface hover:bg-surface-variant/50",
+            )}
+          >
+            <span className="bg-surface-bright flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
+              Eu
+            </span>
+            Eu
+          </button>
           {contacts.length === 0 ? (
             <p className="text-label-sm text-on-surface-variant font-mono">
               Sem contatos cadastrados.
