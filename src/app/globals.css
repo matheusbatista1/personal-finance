@@ -315,7 +315,8 @@ button:disabled,
   display: none;
 }
 
-/* Apple Wallet–style stack: cards overlap by 160px; hovered card pops out of the stack. */
+/* Apple Wallet–style stack: cards overlap by 160px. Hovering "pulls" the card
+   slightly up and fans the cards below it down to reveal the hidden info. */
 .wallet-stack {
   perspective: 1200px;
 }
@@ -323,8 +324,9 @@ button:disabled,
 .wallet-stack .wallet-card {
   position: relative;
   transition:
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.6s ease;
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease;
   transform-style: preserve-3d;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   cursor: pointer;
@@ -336,16 +338,16 @@ button:disabled,
 }
 
 .wallet-stack .wallet-card--active {
-  transform: translateY(-110px) translateZ(30px);
+  transform: translateY(-18px);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
   z-index: 50;
   outline: none;
 }
 
-/* While one card is active, the others ignore pointer events so the rising
-   animation doesn't accidentally drop the cursor onto a neighbour. */
-.wallet-stack .wallet-card--dimmed {
-  pointer-events: none;
+/* Cards positioned AFTER the active one slide down so the active card's hidden
+   bottom info (limite disponível, vencimento) becomes visible. */
+.wallet-stack .wallet-card--active ~ .wallet-card {
+  margin-top: 16px;
 }
 
 @media (prefers-reduced-motion: reduce) {

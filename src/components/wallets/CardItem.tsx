@@ -13,7 +13,6 @@ interface CardItemProps {
   availableLimitCents: number;
   dueDay: number;
   isActive?: boolean;
-  anyActive?: boolean;
   onActivate?: () => void;
 }
 
@@ -25,7 +24,6 @@ export function CardItem({
   availableLimitCents,
   dueDay,
   isActive = false,
-  anyActive = false,
   onActivate,
 }: CardItemProps) {
   const isDarkCard = isDark(color);
@@ -43,7 +41,6 @@ export function CardItem({
       className={cn(
         "wallet-card p-md focus-visible:ring-primary/50 relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-[1.25rem] border border-white/10 focus-visible:ring-2 focus-visible:outline-none",
         isActive && "wallet-card--active",
-        anyActive && !isActive && "wallet-card--dimmed",
       )}
       style={{ background }}
     >

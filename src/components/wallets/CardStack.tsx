@@ -48,7 +48,6 @@ export function CardStack({ cards }: CardStackProps) {
           availableLimitCents={card.availableLimitCents}
           dueDay={card.dueDay}
           isActive={activeId === card.id}
-          anyActive={activeId !== null}
           onActivate={() => setActiveId(card.id)}
         />
       ))}
