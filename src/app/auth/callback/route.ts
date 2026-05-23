@@ -46,5 +46,12 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return failureResponse;
 
+  // Trigger the "welcome splash" on /dashboard once after a fresh sign-in.
+  response.cookies.set("finlux_splash", "1", {
+    path: "/",
+    maxAge: 60,
+    sameSite: "lax",
+  });
+
   return response;
 }

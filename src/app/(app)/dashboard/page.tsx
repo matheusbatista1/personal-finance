@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { makeComputeMonthlyDashboard } from "@/infrastructure/container";
 import { MonthSelector } from "@/components/layout/MonthSelector";
 import { MonthlyHeroCard } from "@/components/finance/MonthlyHeroCard";
@@ -6,6 +7,7 @@ import { SplitResumesPanel } from "@/components/finance/SplitResumesPanel";
 import { RecentTransactionsList } from "@/components/finance/RecentTransactionsList";
 import { DashboardFilters } from "@/components/finance/DashboardFilters";
 import { Fab } from "@/components/finance/Fab";
+import { WelcomeSplash } from "@/components/layout/WelcomeSplash";
 import { currentCompetence, parseCompetence } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/infrastructure/database/supabase/server";
@@ -61,6 +63,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const supabase = await createClient();
   await materializeRecurring(supabase, user.id, year, month);
 
+  const cookieStore = await cookies();
+  const showSplash = cookieStore.get("finlux_splash")?.value === "1";
+
   const useCase = await makeComputeMonthlyDashboard();
   const dashboard = await useCase.execute({
     year,
@@ -73,6 +78,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <>
+      {showSplash ? <WelcomeSplash /> : null}
       <MonthSelector competence={raw} label={dashboard.competenceLabel} />
       <DashboardFilters
         view={view}

@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/infrastructure/database/supabase/server";
@@ -33,6 +34,13 @@ export async function signInWithEmail(input: SignInInput): Promise<ActionResult>
   if (error) {
     return { ok: false, error: "E-mail ou senha incorretos." };
   }
+
+  const cookieStore = await cookies();
+  cookieStore.set("finlux_splash", "1", {
+    path: "/",
+    maxAge: 60,
+    sameSite: "lax",
+  });
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
@@ -68,6 +76,12 @@ export async function signUpWithEmail(input: SignUpInput): Promise<ActionResult>
   // In production with confirmations enabled, data.session is null and the user
   // must click the link in their email before logging in.
   if (data.session) {
+    const cookieStore = await cookies();
+    cookieStore.set("finlux_splash", "1", {
+      path: "/",
+      maxAge: 60,
+      sameSite: "lax",
+    });
     revalidatePath("/", "layout");
     redirect("/dashboard");
   }
