@@ -27,15 +27,25 @@ export function SignupForm() {
 
   function onSubmit(values: SignUpInput) {
     setServerError(null);
+    try {
+      sessionStorage.removeItem("finlux_splash_shown");
+      sessionStorage.setItem("finlux_mfa_flow", "1");
+      document.documentElement.removeAttribute("data-splash");
+    } catch {
+      // ignore
+    }
     startTransition(async () => {
       const result = await signUpWithEmail(values);
       if (result && !result.ok) {
         setServerError(result.error);
         return;
       }
-      if (result && result.ok) {
-        setConfirmationSent(true);
+      if (result.signedIn) {
+        // Hard navigation so the splash plays on the freshly-mounted page.
+        window.location.href = "/";
+        return;
       }
+      setConfirmationSent(true);
     });
   }
 

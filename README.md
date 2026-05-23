@@ -108,14 +108,16 @@ Split logic lives in `CreateTransaction` / `UpdateTransaction` use cases — nev
 
 ## Routes
 
+The root `/` is auth-aware: it renders the login form for unauthenticated visitors, the MFA challenge for AAL1 sessions with a pending second factor, and the macro dashboard for fully-authenticated users. There is no separate `/login` or `/dashboard` route.
+
 | Screen                  | Route              |
 | ----------------------- | ------------------ |
-| Macro monthly dashboard | `/dashboard`       |
+| Macro monthly dashboard | `/`                |
 | Wallets and cards       | `/carteira`        |
 | Invoice detail          | `/fatura/[cardId]` |
 | New expense and split   | `/gastos/novo`     |
 
-Public auth pages: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`.
+Other public auth pages: `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`.
 
 ---
 

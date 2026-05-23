@@ -71,7 +71,7 @@ export function MonthQuickPicker() {
             <Link
               key={choice.competence}
               role="menuitem"
-              href={`/dashboard?m=${choice.competence}`}
+              href={`/?m=${choice.competence}`}
               onClick={() => setOpen(false)}
               className="text-body-md text-on-surface hover:bg-primary-container/20 hover:text-primary px-md py-sm block cursor-pointer font-sans transition-colors"
             >

@@ -13,7 +13,7 @@ export async function AuthShell({ mode, children }: AuthShellProps) {
   const t = await getTranslations("auth");
   const title = mode === "signin" ? t("signIn") : t("signUp");
   const toggleLabel = mode === "signin" ? t("signUp") : t("alreadyHaveAccount");
-  const toggleHref = mode === "signin" ? "/signup" : "/login";
+  const toggleHref = mode === "signin" ? "/signup" : "/";
 
   return (
     <div

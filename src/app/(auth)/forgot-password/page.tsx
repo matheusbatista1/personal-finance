@@ -1,11 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { getOptionalUser } from "@/lib/auth";
 
 export const metadata = {
   title: "Recuperar senha — FinLux",
 };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const user = await getOptionalUser();
+  if (user) redirect("/");
+
   return (
     <div
       className="glass-panel reveal-anim p-md md:p-lg w-full max-w-[440px] rounded-[32px]"
@@ -23,7 +28,7 @@ export default function ForgotPasswordPage() {
       <ForgotPasswordForm />
 
       <p className="text-label-sm mt-lg text-center font-mono">
-        <Link href="/login" className="text-primary hover:text-on-surface transition-colors">
+        <Link href="/" className="text-primary hover:text-on-surface transition-colors">
           Voltar ao login
         </Link>
       </p>

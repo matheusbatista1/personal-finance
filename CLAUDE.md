@@ -235,31 +235,51 @@ src/actions/        Next.js server actions ("use server"). Same role as API rout
 
 ## Auth
 
-Supabase Auth via `@supabase/ssr` with **cookie-based sessions**. The middleware (`middleware.ts`) calls `updateSession()` on every request to refresh the access token transparently. Protected routes live under `src/app/(app)/` — the layout there double-checks the session and redirects to `/login` if absent (defense in depth; middleware already gates it).
+Supabase Auth via `@supabase/ssr` with **cookie-based sessions**. The middleware (`middleware.ts`) calls `updateSession()` on every request to refresh the access token transparently.
 
-Public auth routes live under `src/app/(auth)/`: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback` (OAuth return).
+**Single entry point at `/`**: the root `src/app/page.tsx` is auth-aware and renders one of three UIs depending on the session state:
 
-Server-side guard helper: `requireUser()` in `src/lib/auth.ts` — returns the session or throws/redirects. Use this at the top of every protected server action and every protected page's Server Component.
+- **Not authenticated** → `<AuthBackground><AuthShell mode="signin"><LoginForm /></AuthShell></AuthBackground>` (no `/login` route exists; the login form is the root for unauthenticated visitors).
+- **Authenticated but MFA pending** (AAL1 with a verified TOTP factor) → `<AuthBackground><MfaChallenge /></AuthBackground>` (inline TOTP step; the user cannot reach any protected data until they finish it).
+- **Fully authenticated** (AAL2 or no MFA enrolled) → `<AppShell>` + the macro dashboard.
 
-OAuth providers configured: **Google**. Email/password is also supported. On first sign-up the `handle_new_user` trigger creates the `profiles` row and the default "Outros" wallet.
+Other public auth pages live under `src/app/(auth)/`: `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback` (OAuth return). Logged-in users hitting `/signup` or `/forgot-password` are redirected to `/` (by middleware + a defense-in-depth check in the page). `/reset-password` is intentionally NOT bounced — the recovery magic link issues a session that the user needs to set the new password.
+
+Protected routes live under `src/app/(app)/`. Its layout calls `requireUser()`, which redirects to `/` if the visitor is unauthenticated OR at AAL1 with MFA pending.
+
+Server-side helpers in `src/lib/auth.ts`:
+
+- `requireUser()` — guard for protected pages and server actions. Redirects to `/` on any failed check.
+- `getOptionalUser()` — returns the user or null (no redirect). Used by auth pages doing their own defense.
+- `getAuthState()` — returns `{ user, mfaPending }`. Used by the root layout (to decide whether to mount the splash) and by the root page (to choose which UI to render). Detects MFA pending via a fresh `listFactors()` call rather than the SDK's `session.user.factors` snapshot, which can be stale right after a password sign-in.
+
+**Sign-in flow specifics:**
+
+- Email/password sign-in returns `{ ok: true }` from the server action; the client does `window.location.href = "/"` (hard nav) so the splash mounts on a fresh page after the full flow completes.
+- The forms (`LoginForm`, `SignupForm`, `GoogleButton`) set a `sessionStorage["finlux_mfa_flow"] = "1"` UX flag before submitting. `MfaChallenge` checks it on mount — if absent (the tab didn't initiate the flow itself), it signs the user out and bounces to `/`. The flag is a UX hint, not a security boundary; the real AAL2 enforcement is in `getAuthState`/`requireUser`.
+
+OAuth providers configured: **Google**. On first sign-up the `handle_new_user` trigger creates the `profiles` row and the default "Outros" wallet.
 
 ---
 
 ## Routing
 
-App Router with two route groups:
+App Router with two route groups plus the root `/`:
 
-- `(auth)` → public auth pages, no app chrome.
-- `(app)` → authenticated app, shared layout with sidebar + topbar + month selector, session-protected.
+- `/` (no group) — the auth-aware entry. Renders the login form, the MFA challenge or the dashboard depending on session state (see _Auth_ above).
+- `(auth)` → other public auth pages (`/signup`, `/forgot-password`, `/reset-password`). No app chrome — wrapped by `AuthBackground` via `(auth)/layout.tsx`.
+- `(app)` → authenticated app routes (`/carteira`, `/transacoes`, `/pessoas`, `/configuracoes`, `/relatorios`, `/perfil`, `/fatura/[cardId]`, `/gastos/novo`, `/gastos/[id]/editar`). Shared layout via `(app)/layout.tsx` → `AppShell` (sidebar + topbar). Each route calls `requireUser()`.
 
-Routes (Stitch reference IDs included for design lookup):
+Routes mapped to Stitch reference designs:
 
 | Tela Stitch            | Rota               | Screen ID                          |
 | ---------------------- | ------------------ | ---------------------------------- |
-| Dashboard Macro Mensal | `/dashboard`       | `05e68e0f4e824f9491da4f45f7e68cfb` |
+| Dashboard Macro Mensal | `/`                | `05e68e0f4e824f9491da4f45f7e68cfb` |
 | Carteira e Cartões     | `/carteira`        | `702e4d801f144e699d06c7604f8bc902` |
 | Detalhamento de Fatura | `/fatura/[cardId]` | `ccdfaa51adbd4d949db9532848fe5e7e` |
 | Novo Gasto e Rateio    | `/gastos/novo`     | `ba8cb2e4840e4952afb1126feedae902` |
+
+The shared chrome lives in two reusable components — `AppShell` (`src/components/layout/AppShell.tsx`) and `AuthBackground` (`src/components/auth/AuthBackground.tsx`) — so the auth-aware root page can switch between them without duplicating layout markup.
 
 Additional routes to plan (no Stitch screen yet — confirm with user before designing):
 

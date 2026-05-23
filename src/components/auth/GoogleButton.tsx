@@ -12,6 +12,13 @@ export function GoogleButton({ label = "Continuar com Google" }: { label?: strin
     setError(null);
     setPending(true);
     try {
+      sessionStorage.removeItem("finlux_splash_shown");
+      sessionStorage.setItem("finlux_mfa_flow", "1");
+      document.documentElement.removeAttribute("data-splash");
+    } catch {
+      // ignore
+    }
+    try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",

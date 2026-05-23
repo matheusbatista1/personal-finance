@@ -259,7 +259,7 @@ export function NewTransactionForm({
       role="dialog"
       aria-modal="true"
     >
-      <Link href="/dashboard" className="absolute inset-0 cursor-default" aria-label="Fechar" />
+      <Link href="/" className="absolute inset-0 cursor-default" aria-label="Fechar" />
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="modal-glass relative my-auto w-full max-w-[680px] rounded-2xl"
@@ -271,7 +271,7 @@ export function NewTransactionForm({
             <p className="text-label-sm text-on-surface-variant mt-xs font-mono">{subtitle}</p>
           </div>
           <Link
-            href="/dashboard"
+            href="/"
             aria-label="Fechar"
             className="text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface flex h-10 w-10 items-center justify-center rounded-full transition-colors"
           >
@@ -691,7 +691,7 @@ export function NewTransactionForm({
           )}
           <div className="gap-sm flex">
             <Link
-              href="/dashboard"
+              href="/"
               className="text-label-md text-on-surface hover:bg-surface-variant/50 px-lg py-sm rounded-full font-mono transition-colors"
             >
               Cancelar

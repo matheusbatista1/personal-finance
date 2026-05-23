@@ -28,3 +28,18 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "A senha precisa ter pelo menos 8 caracteres.")
+      .max(72, "A senha precisa ter no máximo 72 caracteres."),
+    passwordConfirm: z.string().min(1, "Confirme a nova senha."),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: "As senhas não conferem.",
+    path: ["passwordConfirm"],
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

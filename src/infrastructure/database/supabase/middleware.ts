@@ -2,16 +2,26 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 
+// Auth-gated routes that require a session. The root `/` is handled by the
+// page itself (renders login or dashboard based on auth), so it is NOT listed
+// here — otherwise unauthenticated visitors would be redirected away from the
+// page that's supposed to show them the login form.
 const PROTECTED_PREFIXES = [
-  "/dashboard",
   "/carteira",
   "/transacoes",
   "/pessoas",
   "/configuracoes",
   "/gastos",
   "/fatura",
+  "/perfil",
+  "/relatorios",
 ];
-const AUTH_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"];
+
+// Public auth flows. Authenticated users hitting these are bounced back to `/`.
+// `/reset-password` is intentionally NOT here — the recovery magic link signs
+// the user in just long enough to set the new password, so we need to let
+// them through even when "authenticated".
+const AUTH_PAGES = ["/signup", "/forgot-password"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -49,14 +59,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirectedFrom", pathname);
+    url.pathname = "/";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     url.search = "";
     return NextResponse.redirect(url);
   }

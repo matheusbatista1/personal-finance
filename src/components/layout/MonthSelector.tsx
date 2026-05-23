@@ -8,7 +8,7 @@ interface MonthSelectorProps {
   pathname?: string;
 }
 
-export function MonthSelector({ competence, label, pathname = "/dashboard" }: MonthSelectorProps) {
+export function MonthSelector({ competence, label, pathname = "/" }: MonthSelectorProps) {
   const prev = shiftCompetence(competence, -1);
   const next = shiftCompetence(competence, +1);
 

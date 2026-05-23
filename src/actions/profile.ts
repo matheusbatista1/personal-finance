@@ -103,7 +103,7 @@ export async function deleteAccount(input: { confirm: string }): Promise<ActionR
 
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/login?deleted=1");
+  redirect("/?deleted=1");
 }
 
 export async function removeAvatar(): Promise<AvatarResult> {

@@ -6,18 +6,22 @@ import { env } from "@/lib/env";
  * OAuth + magic-link callback. We build the redirect response up-front so the
  * Supabase SDK can attach the freshly-issued session cookies directly to it.
  * Relying on `cookies()` from next/headers was racing with the redirect on the
- * very first sign-in, causing the user to bounce back to /login once before
+ * very first sign-in, causing the user to bounce back to `/` once before
  * the session settled.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const explicitNext = searchParams.get("next");
 
-  const failureResponse = NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  // Default landing is the root (which renders the dashboard for authenticated
+  // users). Specific flows pass `next` explicitly (e.g. password reset).
+  const target = explicitNext ?? "/";
+
+  const failureResponse = NextResponse.redirect(`${origin}/?error=auth_callback_failed`);
   if (!code) return failureResponse;
 
-  const response = NextResponse.redirect(`${origin}${next}`);
+  const response = NextResponse.redirect(`${origin}${target}`);
 
   const supabase = createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
@@ -45,13 +49,6 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return failureResponse;
-
-  // Trigger the "welcome splash" on /dashboard once after a fresh sign-in.
-  response.cookies.set("finlux_splash", "1", {
-    path: "/",
-    maxAge: 60,
-    sameSite: "lax",
-  });
 
   return response;
 }

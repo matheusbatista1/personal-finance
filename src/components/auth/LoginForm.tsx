@@ -27,11 +27,26 @@ export function LoginForm() {
 
   function onSubmit(values: SignInInput) {
     setServerError(null);
+    // Force the welcome splash to replay after a fresh sign-in even when the
+    // visitor already saw it earlier in this tab.
+    try {
+      sessionStorage.removeItem("finlux_splash_shown");
+      // Mark this tab as actively authenticating so the MFA step knows the
+      // flow originated here. Without this flag, the MFA page assumes the
+      // user closed the tab mid-flow and bounces them back to the login.
+      sessionStorage.setItem("finlux_mfa_flow", "1");
+      document.documentElement.removeAttribute("data-splash");
+    } catch {
+      // ignore
+    }
     startTransition(async () => {
       const result = await signInWithEmail(values);
       if (result && !result.ok) {
         setServerError(result.error);
+        return;
       }
+      // Hard navigation so the splash plays on the freshly-mounted page.
+      window.location.href = "/";
     });
   }
 

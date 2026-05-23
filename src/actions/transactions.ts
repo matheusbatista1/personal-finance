@@ -191,7 +191,7 @@ async function prepareTransaction(
 }
 
 function revalidateAfterMutation(cardId: string | null) {
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   revalidatePath("/carteira");
   revalidatePath("/transacoes");
   if (cardId) revalidatePath(`/fatura/${cardId}`);
@@ -231,7 +231,7 @@ export async function createTransaction(input: CreateTransactionOutput): Promise
   }
 
   revalidateAfterMutation(prepared.data.primaryCardId);
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function updateTransaction(
@@ -297,7 +297,7 @@ export async function updateTransaction(
   }
 
   revalidateAfterMutation(prepared.data.primaryCardId);
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function deleteTransaction(id: string): Promise<ActionResult> {
@@ -316,7 +316,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   }
 
   revalidateAfterMutation((existing?.card_id as string | null) ?? null);
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function deleteInstallmentGroup(transactionId: string): Promise<ActionResult> {
@@ -343,7 +343,7 @@ export async function deleteInstallmentGroup(transactionId: string): Promise<Act
   }
 
   revalidateAfterMutation((existing?.card_id as string | null) ?? null);
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function toggleSplitSettlement(splitId: string): Promise<ActionResult> {

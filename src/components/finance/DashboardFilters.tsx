@@ -47,7 +47,7 @@ export function DashboardFilters({
     } else {
       params.set(key, value);
     }
-    router.replace(`/dashboard?${params.toString()}`);
+    router.replace(`/?${params.toString()}`);
   }
 
   return (

@@ -19,7 +19,7 @@ export type ActionResult =
 
 function revalidateAfter() {
   revalidatePath("/carteira");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   revalidatePath("/transacoes");
 }
 

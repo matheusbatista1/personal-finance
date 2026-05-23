@@ -13,7 +13,7 @@ function revalidateAfter() {
   revalidatePath("/configuracoes");
   revalidatePath("/gastos/novo");
   revalidatePath("/transacoes");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
 }
 
 export async function createCategory(input: CreateCategoryInput): Promise<ActionResult> {

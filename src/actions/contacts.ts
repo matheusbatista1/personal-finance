@@ -33,7 +33,7 @@ export async function createContact(input: CreateContactInput): Promise<ActionRe
   }
 
   revalidatePath("/pessoas");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -64,7 +64,7 @@ export async function updateContact(id: string, input: CreateContactInput): Prom
   }
 
   revalidatePath("/pessoas");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   return { ok: true };
 }
 
@@ -81,6 +81,6 @@ export async function deleteContact(contactId: string): Promise<ActionResult> {
   }
 
   revalidatePath("/pessoas");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   return { ok: true };
 }

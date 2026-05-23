@@ -21,7 +21,7 @@ export type ActionResult =
 
 function revalidateAfter(cardId?: string) {
   revalidatePath("/carteira");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   revalidatePath("/transacoes");
   if (cardId) revalidatePath(`/fatura/${cardId}`);
 }
