@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import { signOut } from "@/actions/auth";
 
 interface NavItem {
@@ -36,9 +37,8 @@ export function Sidebar() {
     <nav className="border-outline-variant/20 bg-surface/80 fixed top-0 left-0 z-50 hidden h-screen w-64 flex-col border-r shadow-2xl backdrop-blur-2xl md:flex">
       <div className="gap-base p-lg flex h-full flex-col">
         <div className="mb-lg gap-xs flex flex-col">
-          <div className="bg-primary-container/20 text-primary flex h-12 w-12 items-center justify-center rounded-full">
-            <span className="text-label-md font-mono font-semibold uppercase">F</span>
-          </div>
+          <Logo size={48} />
+
           <h2 className="mt-sm text-headline-md text-primary font-sans font-semibold tracking-tight">
             FinLux
           </h2>

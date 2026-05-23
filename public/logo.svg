@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="obsidianGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8a2be2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4b0082;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <path d="M50 10 L85 50 L50 90 L15 50 Z" fill="none" stroke="url(#obsidianGradient)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M42 35 L65 35 M42 35 L42 65 L58 65" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="85" cy="50" r="3" fill="#8a2be2" />
+</svg>

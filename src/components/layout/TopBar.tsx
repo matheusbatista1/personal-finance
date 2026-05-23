@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { MonthQuickPicker } from "@/components/layout/MonthQuickPicker";
 import { AvatarMenu } from "@/components/layout/AvatarMenu";
+import { Logo } from "@/components/ui/Logo";
 import { createClient } from "@/infrastructure/database/supabase/server";
 
 export async function TopBar() {
@@ -17,6 +18,7 @@ export async function TopBar() {
   return (
     <header className="border-outline-variant/10 bg-surface/60 px-lg py-md fixed top-0 right-0 z-40 flex w-full items-center justify-between border-b backdrop-blur-xl md:ml-64 md:w-[calc(100%-256px)]">
       <div className="gap-sm flex items-center">
+        <Logo size={28} />
         <h1 className="text-headline-md text-primary font-sans font-semibold">FinLux</h1>
       </div>
       <div className="gap-md flex items-center">
