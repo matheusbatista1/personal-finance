@@ -82,6 +82,22 @@ export async function signOut(): Promise<void> {
   redirect("/login");
 }
 
+export async function signInWithGoogle(): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+    },
+  });
+
+  if (error || !data.url) {
+    return { ok: false, error: "Não foi possível iniciar o login com Google." };
+  }
+
+  redirect(data.url);
+}
+
 export async function requestPasswordReset(input: ForgotPasswordInput): Promise<ActionResult> {
   const parsed = forgotPasswordSchema.safeParse(input);
   if (!parsed.success) {
